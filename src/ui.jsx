@@ -63,7 +63,7 @@ export function Chip({ children, icon, solid, soft, beige, strike, onClick, clas
 
 export function Row({ icon, iconText, bg, fg, label, title, meta, onClick, selected, right, avatar }) {
   return (
-    <button className={`card row ${selected ? 'selected' : ''}`} onClick={onClick}>
+    <button className={`card row ${selected ? 'selected' : ''}`} onClick={onClick} disabled={!onClick} style={!onClick ? { cursor: 'default' } : undefined}>
       {avatar ? <Avatar m={avatar} size={46} ring="#fff" /> : (
         <span className="ic" style={{ background: bg, color: fg }}>
           {icon ? <Icon name={icon} /> : iconText}
@@ -74,7 +74,7 @@ export function Row({ icon, iconText, bg, fg, label, title, meta, onClick, selec
         <span className="t" style={{ display: 'block' }}>{title}</span>
         {meta && <span className="m" style={{ display: 'block' }}>{meta}</span>}
       </span>
-      {right ?? <span className="arrow"><Icon name="arrow_forward" /></span>}
+      {right ?? (onClick ? <span className="arrow"><Icon name="arrow_forward" /></span> : null)}
     </button>
   )
 }

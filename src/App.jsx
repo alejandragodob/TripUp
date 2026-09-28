@@ -9,7 +9,7 @@ export default function App() {
   const [screen, setScreen] = useState('home')
   const [dir, setDir] = useState('fwd')
   const [members, setMembers] = useState(MEMBERS)
-  const [sheet, setSheet] = useState(null)
+  const [sheet, setSheet] = useState(null) // 'addRen' | 'notifications' | 'newTrip'
   const [toast, setToast] = useState('')
   const [pollStatus, setPollStatus] = useState('draft')
   const [options, setOptions] = useState(OPTIONS)
@@ -68,7 +68,15 @@ export default function App() {
     if (BALANCES.transfers.every((t) => next[t.id])) setTimeout(() => go('settled'), 900)
   }
 
-  const shared = { members, go, say, onTab }
+  // Reset the whole scenario so the demo can be run again from the top.
+  const restart = () => {
+    setMembers(MEMBERS); setPollStatus('draft'); setOptions(OPTIONS)
+    setVotes(Object.fromEntries(OPTIONS.map((o) => [o.id, o.votes])))
+    setWineOut(EXPENSE.items[1].excluded); setPaid({}); setSettle(null); setExpenseLogged(false)
+    go('home', true); say('Demo reset. Lisbon, day 4, 18:52')
+  }
+
+  const shared = { members, go, say, onTab, openSheet: setSheet, pollStatus }
 
   return (
     <div className="stage">
@@ -83,8 +91,10 @@ export default function App() {
         {screen === 'plan' && <Plan {...shared} leader={leader} totalVotes={totalVotes} pollStatus={pollStatus} expenseLogged={expenseLogged} onLog={() => go('expense')} />}
         {screen === 'expense' && <Expense {...shared} wineOut={wineOut} setWineOut={setWineOut} onSave={() => { setExpenseLogged(true); go('balances'); say(`${members.length} balances updated`) }} />}
         {screen === 'balances' && <Balances {...shared} paid={paid} onPick={(t) => setSettle(t)} />}
-        {screen === 'settled' && <Settled {...shared} paid={paid} onNext={() => go('home', true)} />}
+        {screen === 'settled' && <Settled {...shared} paid={paid} onNext={restart} />}
 
+        {sheet === 'notifications' && <Notifications members={members} pollStatus={pollStatus} expenseLogged={expenseLogged} onClose={() => setSheet(null)} go={go} />}
+        {sheet === 'newTrip' && <NewTrip onClose={() => setSheet(null)} say={say} />}
         {sheet === 'addRen' && <AddRen members={members} renIn={renIn} onClose={() => setSheet(null)} onAdd={addRen} onPreview={() => go('ren')} />}
         {settle && <SettleSheet t={settle} members={members} onClose={() => setSettle(null)} onPick={markPaid} />}
         <Toast text={toast} />
@@ -94,11 +104,11 @@ export default function App() {
 }
 
 /* ---------- 01 Home ---------- */
-function Home({ members, go, onTab, pollStatus }) {
+function Home({ members, go, onTab, pollStatus, openSheet, say }) {
   return (
     <div className="screen back">
       <StatusBar />
-      <TopBar left={<span className="hi">Hi Ari</span>} right={<button className="circle-btn" aria-label="Notifications"><Icon name="notifications" /></button>} />
+      <TopBar left={<span className="hi">Hi Ari</span>} right={<button className="circle-btn" aria-label="Notifications" onClick={() => openSheet('notifications')}><Icon name="notifications" /></button>} />
       <div className="scroll has-tabs">
         <h1 className="title">Your trips<span className="sub">one happening now</span></h1>
         <div className="panel" style={{ padding: 12 }}>
@@ -109,17 +119,17 @@ function Home({ members, go, onTab, pollStatus }) {
           </div>
           <div className="meta" style={{ margin: '0 4px 10px' }}>{TRIP.dates} · Day {TRIP.day} of {TRIP.days} · {members.length} friends</div>
           <div className="chips" style={{ marginBottom: 12 }}>
-            <Chip soft>{pollStatus === 'closed' ? 'Tonight: Ramiro at 19:30' : 'Tonight: dinner still open'}</Chip>
-            <Chip soft>You're owed €42</Chip>
+            <Chip soft onClick={() => go(pollStatus === 'draft' ? 'trip' : pollStatus === 'live' ? 'poll' : 'plan')}>{pollStatus === 'closed' ? 'Tonight: Ramiro at 19:30' : 'Tonight: dinner still open'}</Chip>
+            <Chip soft onClick={() => go('balances')}>You're owed €42</Chip>
           </div>
           <Pill onClick={() => go('trip')}>Open trip</Pill>
         </div>
         <Section>Coming up</Section>
         <div className="stack">
-          {OTHER_TRIPS.map((t) => <Row key={t.id} icon={t.icon} bg={t.bg} fg={t.fg} label={t.tag} title={t.title} meta={t.meta} />)}
+          {OTHER_TRIPS.map((t) => <Row key={t.id} icon={t.icon} bg={t.bg} fg={t.fg} label={t.tag} title={t.title} meta={t.meta} onClick={() => say(t.id === 'primavera' ? 'Primavera opens Jun 3. Nothing to decide yet' : 'Dolomites is settled. Tap to see the archive')} />)}
           <div className="chips">
-            <Chip icon="add">New trip</Chip>
-            <Chip>Import from Splitwise</Chip>
+            <Chip icon="add" onClick={() => openSheet('newTrip')}>New trip</Chip>
+            <Chip onClick={() => say('Reads your Splitwise groups. Mocked in this demo')}>Import from Splitwise</Chip>
           </div>
         </div>
       </div>
@@ -129,11 +139,11 @@ function Home({ members, go, onTab, pollStatus }) {
 }
 
 /* ---------- 02 Trip group view ---------- */
-function Trip({ members, go, onTab, openAdd, renIn, pollStatus }) {
+function Trip({ members, go, onTab, openAdd, renIn, pollStatus, openSheet }) {
   return (
     <div className="screen">
       <StatusBar />
-      <TopBar onBack={() => go('home', true)} right={<button className="circle-btn" aria-label="Notifications"><Icon name="notifications" /></button>} />
+      <TopBar onBack={() => go('home', true)} right={<button className="circle-btn" aria-label="Notifications" onClick={() => openSheet('notifications')}><Icon name="notifications" /></button>} />
       <div className="scroll has-tabs">
         <h1 className="title">Last night in<span className="sub">Lisbon</span></h1>
         <div style={{ position: 'relative', height: 96, borderRadius: 20, overflow: 'hidden' }}>
@@ -196,7 +206,7 @@ function AddRen({ onClose, onAdd, onPreview, renIn }) {
           <span className={`toggle ${tonightOnly ? '' : 'off'}`} />
         </button>
         <Pill onClick={onAdd} disabled={renIn}>{renIn ? 'Ren is already in' : 'Add Ren'}</Pill>
-        <button className="caption" style={{ textAlign: 'center', padding: 4 }} onClick={onPreview}>See what Ren sees</button>
+        <button className="caption tap" style={{ justifyContent: 'center', width: '100%' }} onClick={onPreview}>See what Ren sees</button>
       </div>
     </Sheet>
   )
@@ -226,7 +236,7 @@ function RenSide({ members, go, onJoin }) {
             <Row key={t} icon={ic} bg={bg} fg={fg} title={t} meta={m} right={<span />} />
           ))}
         </div>
-        <button className="caption" style={{ display: 'block', margin: '20px auto 30px' }} onClick={() => go('trip', true)}>Back to Ari's phone</button>
+        <button className="caption tap" style={{ display: 'flex', margin: '12px auto 30px', padding: '0 12px' }} onClick={() => go('trip', true)}>Back to Ari's phone</button>
       </div>
     </div>
   )
@@ -264,7 +274,7 @@ function CreatePoll({ go, options, setOptions, onSend }) {
                   {o.source}
                 </span>
               </span>
-              <button className="circle-btn" style={{ background: 'var(--beige)', width: 30, height: 30 }} onClick={() => setOptions(options.filter((x) => x !== o))} aria-label={`Remove ${o.name}`}><Icon name="close" style={{ fontSize: 16 }} /></button>
+              <button className="circle-btn" style={{ background: 'var(--beige)' }} onClick={() => setOptions(options.filter((x) => x !== o))} aria-label={`Remove ${o.name}`}><Icon name="close" style={{ fontSize: 16 }} /></button>
             </div>
           ))}
           <button className="row" style={{ background: 'var(--beige)', borderRadius: 20 }} onClick={() => removed.length && setOptions([...options, removed[0]])}>
@@ -389,7 +399,7 @@ function LivePoll({ members, go, onTab, options, votes, totalVotes, notVoted, le
   )
 }
 
-function PollsStub({ go, onTab }) {
+function PollsStub({ go, onTab, say }) {
   return (
     <div className="screen">
       <StatusBar />
@@ -399,8 +409,8 @@ function PollsStub({ go, onTab }) {
         <div className="empty"><Icon name="how_to_vote" />Polls work for any decision. Where to eat, where to stay, what to do.</div>
         <div className="chips" style={{ justifyContent: 'center' }}>
           <Chip icon="restaurant" solid onClick={() => go('createPoll')}>Where for dinner?</Chip>
-          <Chip icon="hotel">Where to stay</Chip>
-          <Chip icon="explore">What to do</Chip>
+          <Chip icon="hotel" onClick={() => say('Same flow as dinner: options from the wishlist')}>Where to stay</Chip>
+          <Chip icon="explore" onClick={() => say('Same flow as dinner: options from the wishlist')}>What to do</Chip>
         </div>
       </div>
       <TabBar active="Polls" onTab={onTab} />
@@ -589,5 +599,41 @@ function Settled({ members, paid, onNext }) {
       </div>
       <div className="sticky"><Pill onClick={onNext}>Plan the next trip</Pill></div>
     </div>
+  )
+}
+
+
+/* ---------- Notifications sheet ---------- */
+function Notifications({ members, pollStatus, expenseLogged, onClose, go }) {
+  const items = []
+  if (expenseLogged) items.push(['receipt_long', 'var(--peri)', 'var(--peri-fg)', 'Dinner at Ramiro logged', `€214 split ${members.length} ways · just now`, 'balances'])
+  if (pollStatus === 'closed') items.push(['calendar_month', 'var(--pink)', 'var(--pink-fg)', 'Ramiro is in tonight\'s plan', '19:30 · from the poll', 'plan'])
+  if (pollStatus === 'live') items.push(['how_to_vote', 'var(--peach)', 'var(--peach-fg)', 'Where for dinner? is live', `${members.length} people asked · vote now`, 'poll'])
+  if (members.some((m) => m.id === 'R')) items.push(['person_add', 'var(--mint)', 'var(--mint-fg)', 'Ren joined Lisbon', 'via your link · dinner tonight only', 'trip'])
+  items.push(['euro', 'var(--peri)', 'var(--peri-fg)', 'Maya logged LX Factory', '€86 · you owe €14.33 · 14:20', 'balances'])
+  items.push(['photo_camera', 'var(--beige)', 'var(--ink)', 'Sam added 12 photos', 'Torre de Belém · 11:40', 'plan'])
+  return (
+    <Sheet onClose={onClose}>
+      <h1 className="title sm" style={{ margin: '6px 0 14px' }}>Notifications<span className="sub">today</span></h1>
+      <div className="stack">
+        {items.map(([ic, bg, fg, t, m, dest]) => <Row key={t} icon={ic} bg={bg} fg={fg} title={t} meta={m} onClick={() => go(dest)} />)}
+      </div>
+    </Sheet>
+  )
+}
+
+/* ---------- New trip sheet ---------- */
+function NewTrip({ onClose, say }) {
+  return (
+    <Sheet onClose={onClose}>
+      <h1 className="title sm" style={{ margin: '6px 0 14px' }}>New trip<span className="sub">where and when</span></h1>
+      <div className="stack">
+        <div className="field"><Icon name="location_on" style={{ color: 'var(--grey)' }} /><span style={{ flex: 1, color: 'var(--grey)' }}>City</span></div>
+        <div className="field"><Icon name="calendar_month" style={{ color: 'var(--grey)' }} /><span style={{ flex: 1, color: 'var(--grey)' }}>Dates</span></div>
+        <div className="field"><Icon name="hotel" style={{ color: 'var(--grey)' }} /><span style={{ flex: 1, color: 'var(--grey)' }}>Stay (optional)</span></div>
+        <p className="caption" style={{ margin: 0 }}>Creating the trip makes you the organizer. Anyone can still add anything.</p>
+        <Pill onClick={() => { onClose(); say('Trip creation is mocked in this demo') }}>Create and invite</Pill>
+      </div>
+    </Sheet>
   )
 }

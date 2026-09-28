@@ -19,13 +19,13 @@ export const TRIP = {
 }
 
 export const OTHER_TRIPS = [
-  { id: 'primavera', tag: 'Festival', title: 'Primavera Sound, Barcelona', meta: 'Jun 3 – 6, 2027 · 8 friends', icon: 'festival', bg: '#E3E9FF', fg: '#3B5BB5' },
-  { id: 'dolomites', tag: 'Past · settled', title: 'Dolomites hut-to-hut', meta: 'Aug 2026 · 4 friends · €2,140', icon: 'hiking', bg: '#DDEFE4', fg: '#2F7D5B' },
+  { id: 'primavera', tag: 'Festival', title: 'Primavera Sound, Barcelona', meta: 'Jun 3 – 6, 2027 · 8 friends', icon: 'festival', bg: '#E3E9FF', fg: '#3452A3' },
+  { id: 'dolomites', tag: 'Past · settled', title: 'Dolomites hut-to-hut', meta: 'Aug 2026 · 4 friends · €2,140', icon: 'hiking', bg: '#DDEFE4', fg: '#276A4D' },
 ]
 
 export const ITINERARY = [
-  { id: 'belem', time: '10:00', label: 'Sightseeing', title: 'Torre de Belém', meta: 'Done · 5 went', bg: '#DDEFE4', fg: '#2F7D5B' },
-  { id: 'lx', time: '14:00', label: 'Lunch', title: 'LX Factory', meta: '€86 · logged by Maya', bg: '#FFE2C9', fg: '#E0562E' },
+  { id: 'belem', time: '10:00', label: 'Sightseeing', title: 'Torre de Belém', meta: 'Done · 5 went', bg: '#DDEFE4', fg: '#276A4D' },
+  { id: 'lx', time: '14:00', label: 'Lunch', title: 'LX Factory', meta: '€86 · logged by Maya', bg: '#FFE2C9', fg: '#A63C18' },
 ]
 
 export const OPTIONS = [
