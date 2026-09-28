@@ -275,28 +275,73 @@ callouts = {
  9:[("STATE",["All paid → group confirmation","posted to chat. Loop closed."])],
 }
 
+def diamond(cx,cy,w,h,lines):
+    s=f'<polygon points="{cx},{cy-h/2} {cx+w/2},{cy} {cx},{cy+h/2} {cx-w/2},{cy}" fill="#fff" stroke="#555" stroke-width="1.5"/>'
+    for i,l in enumerate(lines): s+=text(cx,cy+4+(i-(len(lines)-1)/2)*14,l,11,INK,"Open Sans",600,"middle")
+    return s
+def arrow_label(x,y,label):
+    w=len(label)*6.4+16
+    return rect(x-w/2,y-9,w,18,"#fff","#555",9,1)+text(x,y+4,label,11,INK,"Open Sans",600,"middle")
 def wireflow():
-    cols=5; gx=230; gy=260; mx=80; my=140
+    cols=5; gx=270; gy=460; mx=170; my=190
     body=[f'<defs><marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#555"/></marker></defs>']
-    body.append(text(mx,60,"TripUp. Wireflow · the Lisbon scenario in 10 screens",28,INK,"Open Sans",700))
-    body.append(text(mx,88,"iPhone 15 · 393 × 852 · Lo-fi. Red = decision the user makes · Green = state that changes · Blue = interaction pattern. Screen 03b (Ren's side) and the settle sheet (09) are annotated, not drawn.",13,GREY,"Open Sans"))
+    body.append(text(mx,60,"TripUp wireflow · the Lisbon scenario in 10 screens",28,INK,"Open Sans",700))
+    body.append(text(mx,88,"Lo-fi, iPhone 15 (393 × 852). Follow the numbered arrows. Diamonds are checks the app makes; callouts under each screen record the decision the user takes, the state that changes, and the pattern in play.",13,GREY,"Open Sans"))
+    # legend
+    lx=mx+5*W+4*gx-330; ly=40
+    body.append(rect(lx,ly,330,86,"#fff","#555",8,1))
+    body.append(text(lx+12,ly+20,"LEGEND",10,GREY,"Open Sans",700))
+    body.append(f'<path d="M{lx+12} {ly+38} h40" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>'+text(lx+62,ly+42,"trigger · what the user taps",11,INK,"Open Sans"))
+    body.append(f'<polygon points="{lx+32},{ly+50} {lx+44},{ly+58} {lx+32},{ly+66} {lx+20},{ly+58}" fill="#fff" stroke="#555" stroke-width="1.2"/>'+text(lx+62,ly+62,"check the app makes",11,INK,"Open Sans"))
+    for j,(k,c) in enumerate([("DECISION","#E0562E"),("STATE","#2F7D5B"),("PATTERN","#3B5BB5")]):
+        body.append(rect(lx+12+j*104,ly+72,10,10,c,r=2)+text(lx+26+j*104,ly+81,k.title(),10,INK,"Open Sans"))
     pos=[]
     for i,(name,title,elems,note) in enumerate(screens):
         r,c=divmod(i,cols); x=mx+c*(W+gx); y=my+r*(H+gy)
         pos.append((x,y))
         body.append(g(x,y,[wf_screen(name,title,elems,note=note)]))
-        cy=y+60
+        cy=y+H+60
         for kind,lines in callouts.get(i,[]):
-            body.append(callout(x+W+16,cy,kind,lines,w=200)); cy+=22+16*len(lines)+10+10
+            body.append(callout(x,cy,kind,lines,w=W)); cy+=22+16*len(lines)+10+8
+    triggers=["1 · tap Lisbon","2 · tap + on the group","3 · Add Ren, then Start the poll","4 · Send to the group","5 · tap Vote on the card","6 · Close poll","7 · Log the dinner","8 · Save","9 · settle each transfer"]
+    checks={5:("Majority","reached?","no · nudge Theo & Ren, keep waiting"),8:("All","paid?","no · nudge Nic & Theo")}
+    ay=lambda y: y+H/2+40
     for i in range(len(pos)-1):
         (x1,y1),(x2,y2)=pos[i],pos[i+1]
-        if (i+1)%cols: body.append(flow_arrow(x1+W,y1+H/2+80,x2,y2+H/2+80))
-        else: body.append(f'<path d="M{x1+W/2} {y1+H+60} v80 H{x2+W/2} V{y2-30}" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>')
-    # loop back 10 → 01
-    x1,y1=pos[-1]; x0,y0=pos[0]
-    body.append(f'<path d="M{x1+W/2} {y1+H+60} v100 H{x0-40} V{y0+H/2} H{x0-8}" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="6 6" marker-end="url(#ah)"/>')
-    body.append(text(x0-30,y0+H/2-10,"next trip",11,GREY,"Open Sans"))
-    total_w=mx*2+cols*W+(cols-1)*gx+160; total_h=my+2*H+gy+160
+        if (i+1)%cols:
+            if i in checks:
+                a,b,no=checks[i]; cx=(x1+W+x2)/2; cy=ay(y1)
+                body.append(f'<path d="M{x1+W} {cy} H{cx-62}" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>')
+                body.append(diamond(cx,cy,120,76,[a,b]))
+                body.append(f'<path d="M{cx+60} {cy} H{x2-4}" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>')
+                body.append(text(cx+72,cy-8,"yes",11,INK,"Open Sans",700))
+                body.append(f'<path d="M{cx} {cy-38} v-40 H{x1+W/2+120} v-1" fill="none" stroke="#555" stroke-width="1.2" stroke-dasharray="4 4" marker-end="url(#ah)"/>')
+                body.append(arrow_label(cx,cy-96,no))
+                body.append(arrow_label(cx,cy+66,triggers[i]))
+            else:
+                cy=ay(y1)
+                body.append(f'<path d="M{x1+W} {cy} H{x2-4}" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>')
+                body.append(arrow_label((x1+W+x2)/2,cy-22,triggers[i]))
+        else:
+            stack=lambda k: sum(22+16*len(l)+10+8 for _,l in callouts.get(k,[]))
+            rowmax=max(stack(k) for k in range(0,cols))
+            yy=y1+H+60+rowmax+50
+            body.append(f'<path d="M{x1+W/2} {y1+H+60+stack(i)+6} V{yy} H{x2+W/2} V{y2-34}" fill="none" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>')
+            body.append(arrow_label((x1+x2+W)/2,yy,triggers[i]))
+    # start marker
+    x0,y0=pos[0]
+    body.append(f'<circle cx="{x0-70}" cy="{ay(y0)}" r="9" fill="#555"/>'+f'<path d="M{x0-60} {ay(y0)} H{x0-4}" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>')
+    body.append(text(x0-70,ay(y0)-18,"START",10,GREY,"Open Sans",700,"middle"))
+    body.append(text(x0-70,ay(y0)+30,"Ari opens TripUp,",10,GREY,"Open Sans",400,"middle")+text(x0-70,ay(y0)+43,"Sat 18:52",10,GREY,"Open Sans",400,"middle"))
+    # end + loop back 10 -> 01
+    xl,yl=pos[-1]
+    cyl=ay(yl)
+    body.append(f'<circle cx="{xl+W+70}" cy="{cyl}" r="9" fill="#fff" stroke="#555" stroke-width="3"/>'+f'<path d="M{xl+W} {cyl} H{xl+W+56}" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>')
+    body.append(text(xl+W+70,cyl-18,"END",10,GREY,"Open Sans",700,"middle"))
+    body.append(arrow_label(xl+W/2+40,cyl-22,"10 · Plan the next trip"))
+    body.append(f'<path d="M{xl+W+70} {cyl+10} V{yl+H+300} H{x0-70} V{ay(y0)+60} v-40" fill="none" stroke="#555" stroke-width="1.2" stroke-dasharray="6 6" marker-end="url(#ah)"/>')
+    body.append(arrow_label((x0+xl)/2+W/2,yl+H+300,"loop · back to Home for the next trip"))
+    total_w=mx*2+cols*W+(cols-1)*gx+120; total_h=my+2*H+gy+340
     return svg(total_w,total_h,body,bg="#F5F5F3")
 
 open(f"{OUT}/wireflow.svg","w").write(wireflow())
