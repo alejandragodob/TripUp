@@ -13,6 +13,13 @@ if (document.fonts?.load) {
   ]).then(ready, ready)
 } else ready()
 
+// Scale the device frame to fit windows shorter than the phone (plus a margin), never larger than 1:1.
+const fit = () => {
+  const s = Math.min(1, (window.innerHeight - 48) / 852, (window.innerWidth - 48) / 393)
+  document.documentElement.style.setProperty('--scale', s.toFixed(3))
+}
+fit(); window.addEventListener('resize', fit)
+
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
