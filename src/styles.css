@@ -36,7 +36,7 @@ button { font: inherit; color: inherit; border: 0; background: none; padding: 0;
 img { display: block; }
 
 /* Phone frame: exactly 393 x 852 on desktop, full viewport on phones */
-.stage { min-height: 100dvh; display: flex; align-items: center; justify-content: center; }
+.stage { height: 100dvh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
 .phone {
   position: relative; width: 393px; height: 852px; overflow: hidden;
   background: var(--cream); border-radius: 44px;
@@ -46,7 +46,7 @@ img { display: block; }
 .phone { transform: scale(var(--scale, 1)); transform-origin: center; }
 /* Phones: fill the screen; the layout inside is fluid so 360 to 430 wide all work. */
 @media (max-width: 520px) {
-  .stage { display: block; }
+  .stage { display: block; height: auto; overflow: visible; }
   .phone { width: 100vw; height: 100dvh; border-radius: 0; box-shadow: none; transform: none; }
 }
 
