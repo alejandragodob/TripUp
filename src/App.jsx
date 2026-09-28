@@ -146,16 +146,18 @@ function Trip({ members, go, onTab, openAdd, renIn, pollStatus, openSheet }) {
       <TopBar onBack={() => go('home', true)} right={<button className="circle-btn" aria-label="Notifications" onClick={() => openSheet('notifications')}><Icon name="notifications" /></button>} />
       <div className="scroll has-tabs">
         <h1 className="title">Last night in<span className="sub">Lisbon</span></h1>
-        <div style={{ position: 'relative', height: 96, borderRadius: 20, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', height: 104, borderRadius: 20, overflow: 'hidden' }}>
           <img src={TRIP.photo} alt="The group in Lisbon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(20,20,20,0) 20%, rgba(20,20,20,.75))' }} />
-          <div style={{ position: 'absolute', left: 14, right: 14, bottom: 10, display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', color: '#fff', fontSize: 13, fontWeight: 500 }}>
-            <span style={{ lineHeight: 1.5, flex: 1, minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', marginRight: 8 }}>
-              <span style={{ fontSize: 11, opacity: .8, display: 'block' }}>{members.length} friends{renIn ? '' : ' · Ren joins tonight'}</span>
+          <div style={{ position: 'absolute', left: 14, right: 14, bottom: 10, color: '#fff', fontSize: 13, fontWeight: 500 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 11, opacity: .8 }}>{members.length} friends{renIn ? '' : ' · Ren joins tonight'}</span>
+              <AvatarStack members={members} size={26} ring="#4A4038" onAdd={renIn ? undefined : openAdd} />
+            </div>
+            <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               <b>Nic</b> <span style={{ background: '#fff', color: 'var(--ink)', fontSize: 9, fontWeight: 700, letterSpacing: .6, borderRadius: 4, padding: '2px 5px', margin: '0 4px' }}>ORGANIZER</span>
               · Ari · Maya · Theo · Sam{renIn ? ' · Ren' : ''}
-            </span>
-            <AvatarStack members={members} size={28} ring="#4A4038" onAdd={renIn ? undefined : openAdd} />
+            </div>
           </div>
         </div>
         <div className="panel" style={{ marginTop: 12 }}>
