@@ -113,7 +113,7 @@ function Home({ members, go, onTab, pollStatus, openSheet, say }) {
       <div className="scroll has-tabs">
         <h1 className="title">Your trips<span className="sub">one happening now</span></h1>
         <div className="panel" style={{ padding: 12 }}>
-          <img src={TRIP.photo} alt="" style={{ width: '100%', height: 92, objectFit: 'cover', borderRadius: 16 }} />
+          <img src={TRIP.hero} alt="Lisbon" style={{ width: '100%', height: 110, objectFit: 'cover', borderRadius: 16 }} />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '12px 4px 4px' }}>
             <span style={{ fontFamily: 'var(--display)', fontSize: 28 }}>Lisbon</span>
             <AvatarStack members={members} size={26} ring="var(--beige)" />
@@ -128,7 +128,7 @@ function Home({ members, go, onTab, pollStatus, openSheet, say }) {
         <Section>Coming up</Section>
         <div className="stack">
           {OTHER_TRIPS.map((t) => (
-            <button key={t.id} className="card row" onClick={() => say(t.id === 'primavera' ? 'Primavera opens Jun 3. Nothing to decide yet' : 'Dolomites is settled. Tap to see the archive')}>
+            <button key={t.id} className="card row" onClick={() => say(t.id === 'primavera' ? 'Primavera opens Jun 3. Nothing to decide yet' : 'New York is settled. Archive opens here')}>
               <Photo src={t.photo} className="event-thumb" fallback={<span className="ic" style={{ background: t.bg, color: t.fg }}><Icon name={t.icon} /></span>} />
               <span className="txt"><span className="l">{t.tag}</span><span className="t" style={{ display: 'block' }}>{t.title}</span><span className="m" style={{ display: 'block' }}>{t.meta}</span></span>
               <span className="arrow"><Icon name="arrow_forward" /></span>

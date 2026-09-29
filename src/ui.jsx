@@ -57,10 +57,8 @@ export function RailLogo({ id, size = 46 }) {
     </span>
   )
   if (id === 'revolut') return (
-    <span style={{ ...box, background: '#000', color: '#fff' }} aria-label="Revolut">
-      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="#fff" d="M5 2h8.2c3.6 0 6.3 2.4 6.3 5.9 0 2.9-1.9 5-4.6 5.7L20 22h-4.6l-4.7-8h-1.6v8H5V2Zm4.1 3.6v5h3.7c1.6 0 2.7-1 2.7-2.5s-1.1-2.5-2.7-2.5H9.1Z"/>
-      </svg>
+    <span style={{ ...box, background: '#fff', boxShadow: 'inset 0 0 0 1px var(--hair)' }} aria-label="Revolut">
+      <img src="img/revolut.png" alt="" width={size * 0.6} height={size * 0.6} style={{ width: size * 0.6, height: size * 0.6 }} />
     </span>
   )
   if (id === 'wise') return (

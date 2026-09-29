@@ -16,11 +16,12 @@ export const TRIP = {
   day: 4,
   days: 4,
   photo: 'img/group.jpg',
+  hero: 'img/lisbon-bridge.jpg',
 }
 
 export const OTHER_TRIPS = [
   { id: 'primavera', tag: 'Festival', title: 'Primavera Sound, Barcelona', meta: 'Jun 3 – 6, 2027 · 8 friends', icon: 'festival', bg: '#E3E9FF', fg: '#3452A3', photo: 'img/events/primavera.jpg' },
-  { id: 'dolomites', tag: 'Past · settled', title: 'Dolomites hut-to-hut', meta: 'Aug 2026 · 4 friends · €2,140', icon: 'hiking', bg: '#DDEFE4', fg: '#276A4D', photo: 'img/events/dolomites.jpg' },
+  { id: 'newyork', tag: 'Past · settled', title: 'New York, Christmas markets', meta: 'Dec 2025 · 4 friends · €2,140', icon: 'storefront', bg: '#DDEFE4', fg: '#276A4D', photo: 'img/events/newyork.jpg' },
 ]
 
 export const ITINERARY = [

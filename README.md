@@ -39,7 +39,7 @@ Tabs (Trips / Polls / Plan / Money) work throughout.
 - `src/ui.jsx` · shared components
 - `src/styles.css` · design tokens (cream `#F7F3EC`, ink `#141414`, Newsreader + Figtree, Material Symbols Rounded)
 - `src/data.js` · mock data
-- `public/img/` · photos (Unsplash placeholders from the design file; swap before shipping)
+- `public/img/` · photos (Unsplash placeholders from the design file plus supplied images; check licensing before anything public)
 
 ## Deploy
 
