@@ -15,8 +15,9 @@ export const TRIP = {
   dates: 'Sep 24 – 28',
   day: 4,
   days: 4,
-  photo: 'img/group.jpg',
+  photo: 'img/lisbon-bridge.jpg',
   hero: 'img/lisbon-bridge.jpg',
+  group: 'img/group.jpg',
 }
 
 export const OTHER_TRIPS = [
@@ -25,8 +26,8 @@ export const OTHER_TRIPS = [
 ]
 
 export const ITINERARY = [
-  { id: 'belem', time: '10:00', label: 'Sightseeing', title: 'Torre de Belém', meta: 'Done · 5 went', bg: '#DDEFE4', fg: '#276A4D' },
-  { id: 'lx', time: '14:00', label: 'Lunch', title: 'LX Factory', meta: '€86 · logged by Maya', bg: '#FFE2C9', fg: '#A63C18' },
+  { id: 'belem', time: '10:00', label: 'Sightseeing', title: 'Torre de Belém', meta: 'Done · 5 went', bg: '#DDEFE4', fg: '#276A4D', photo: 'img/lisbon.jpg' },
+  { id: 'lx', time: '14:00', label: 'Lunch', title: 'LX Factory', meta: '€86 · logged by Maya', bg: '#FFE2C9', fg: '#A63C18', photo: 'img/lx.jpg' },
 ]
 
 export const OPTIONS = [

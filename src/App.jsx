@@ -154,7 +154,7 @@ function Trip({ members, go, onTab, openAdd, renIn, pollStatus, openSheet }) {
       <div className="scroll has-tabs">
         <h1 className="title">Last night in<span className="sub">Lisbon</span></h1>
         <div style={{ position: 'relative', height: 104, borderRadius: 20, overflow: 'hidden' }}>
-          <img src={TRIP.photo} alt="The group in Lisbon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <img src={TRIP.photo} alt="Lisbon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(20,20,20,0) 20%, rgba(20,20,20,.75))' }} />
           <div style={{ position: 'absolute', left: 14, right: 14, bottom: 10, color: '#fff', fontSize: 13, fontWeight: 500 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -186,7 +186,7 @@ function Trip({ members, go, onTab, openAdd, renIn, pollStatus, openSheet }) {
         </div>
         <Section right="Full plan" onRight={() => go('plan')}>Today</Section>
         <div className="stack">
-          {ITINERARY.map((i) => <Row key={i.id} iconText={i.time} bg={i.bg} fg={i.fg} label={i.label} title={i.title} meta={i.id === 'lx' ? i.meta : undefined} onClick={() => go('plan')} />)}
+          {ITINERARY.map((i) => <Row key={i.id} iconText={i.time} bg={i.bg} fg={i.fg} photo={i.photo} label={i.label} title={i.title} meta={i.id === 'lx' ? i.meta : undefined} onClick={() => go('plan')} />)}
           <Row iconText="€" bg="var(--peri)" fg="var(--peri-fg)" label="Trip money" title="You're owed €42" meta="Settle with Apple Pay or Revolut" onClick={() => go('balances')} />
         </div>
       </div>
@@ -229,7 +229,7 @@ function RenSide({ members, go, onJoin }) {
       <div className="addr"><Icon name="lock" /> <span style={{ flex: 1 }}>tripup.app/j/lisbon</span><Icon name="more_horiz" /></div>
       <div className="scroll">
         <div className="hero-photo">
-          <img src={TRIP.photo} alt="" />
+          <img src={TRIP.photo} alt="Lisbon" />
           <div className="avs"><AvatarStack members={members.filter((m) => m.id !== 'R')} size={28} ring="#4A4038" /></div>
         </div>
         <h1 className="title">Ari added you<span className="sub">to Lisbon</span></h1>
@@ -349,7 +349,7 @@ function Chat({ members, options, votes, totalVotes, onOpen, go }) {
       )}
       <div className="head">
         <button onClick={() => go('createPoll', true)} aria-label="Back"><Icon name="arrow_back_ios" style={{ color: 'var(--blue)' }} /></button>
-        <AvatarStack members={members.slice(0, 3)} size={24} ring="#F6F6F6" />
+        <img className="gp" src={TRIP.group} alt="Lisboa group" />
         <div style={{ flex: 1 }}><div className="t">Lisboa</div><div className="s">{members.map((m) => m.name).join(', ')}</div></div>
         <Icon name="videocam" style={{ color: 'var(--blue)' }} /><Icon name="call" style={{ color: 'var(--blue)' }} />
       </div>
@@ -482,10 +482,10 @@ function Plan({ members, go, onTab, leader, totalVotes, pollStatus, expenseLogge
         )}
         <Section>Today · Sat 27</Section>
         <div className="stack">
-          <Row iconText="10:00" bg="var(--mint)" fg="var(--mint-fg)" title="Torre de Belém" meta="Done · 5 went" right={<span />} />
-          <Row iconText="14:00" bg="var(--peach)" fg="var(--peach-fg)" title="LX Factory" meta="€86 · logged by Maya" right={<span />} />
+          <Row iconText="10:00" bg="var(--mint)" fg="var(--mint-fg)" photo="img/lisbon.jpg" title="Torre de Belém" meta="Done · 5 went" right={<span />} />
+          <Row iconText="14:00" bg="var(--peach)" fg="var(--peach-fg)" photo="img/lx.jpg" title="LX Factory" meta="€86 · logged by Maya" right={<span />} />
           {won ? (
-            <Row iconText="19:30" bg="var(--pink)" fg="var(--pink-fg)" title="Dinner · Cervejaria Ramiro" meta={`From tonight's poll · ${members.length} going`} selected right={<span className="tag">poll</span>} />
+            <Row iconText="19:30" bg="var(--pink)" fg="var(--pink-fg)" photo={leader.photo} title={`Dinner · ${leader.name}`} meta={`From tonight's poll · ${members.length} going`} selected right={<span className="tag">poll</span>} />
           ) : (
             <Row iconText="19:30" bg="var(--beige)" fg="var(--grey)" title="Dinner · still open" meta="Poll the group" onClick={() => go(pollStatus === 'live' ? 'poll' : 'createPoll')} />
           )}

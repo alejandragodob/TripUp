@@ -64,7 +64,7 @@ export function RailLogo({ id, size = 46 }) {
   if (id === 'wise') return (
     <span style={{ ...box, background: '#9FE870', color: '#163300' }} aria-label="Wise">
       <svg width={size * 0.62} height={size * 0.3} viewBox="0 0 60 30" aria-hidden="true">
-        <text x="2" y="22" fill="#163300" fontFamily="Figtree, system-ui, sans-serif" fontSize="21" fontWeight="800" letterSpacing="-1">wise</text>
+        <text x="30" y="22" textAnchor="middle" fill="#163300" fontFamily="Figtree, system-ui, sans-serif" fontSize="21" fontWeight="800" letterSpacing="-1">wise</text>
       </svg>
     </span>
   )
@@ -99,10 +99,15 @@ export function Chip({ children, icon, solid, soft, beige, strike, onClick, clas
   )
 }
 
-export function Row({ icon, iconText, bg, fg, label, title, meta, onClick, selected, right, avatar }) {
+export function Row({ icon, iconText, bg, fg, label, title, meta, onClick, selected, right, avatar, photo }) {
   return (
     <button className={`card row ${selected ? 'selected' : ''}`} onClick={onClick} disabled={!onClick} style={!onClick ? { cursor: 'default' } : undefined}>
-      {avatar ? <Avatar m={avatar} size={46} ring="#fff" /> : (
+      {avatar ? <Avatar m={avatar} size={46} ring="#fff" /> : photo ? (
+        <span className="thumb" style={{ background: bg }}>
+          <Photo src={photo} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} fallback={<span className="ic" style={{ background: bg, color: fg, width: 46, height: 46 }}>{icon ? <Icon name={icon} /> : iconText}</span>} />
+          {iconText && <span className="thumb-tag">{iconText}</span>}
+        </span>
+      ) : (
         <span className="ic" style={{ background: bg, color: fg }}>
           {icon ? <Icon name={icon} /> : iconText}
         </span>
