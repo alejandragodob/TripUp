@@ -353,7 +353,7 @@ function Chat({ members, options, votes, totalVotes, onOpen, go }) {
         <div style={{ flex: 1 }}><div className="t">Lisboa</div><div className="s">{members.map((m) => m.name).join(', ')}</div></div>
         <Icon name="videocam" style={{ color: 'var(--blue)' }} /><Icon name="call" style={{ color: 'var(--blue)' }} />
       </div>
-      <div className="body">
+      <div className="body" style={{ paddingTop: push ? 92 : 12, transition: 'padding-top 300ms var(--ease)' }}>
         {members.some((m) => m.id === 'R') && <div className="sys">Ren joined the trip via Ari's link</div>}
         <div className="bub"><div className="who m">Maya</div>ok back at the house, dinner?? I'm starving<div className="time">18:47</div></div>
         <div className="bub"><div className="who t">Theo</div>anything but a tourist trap pls<div className="time">18:49</div></div>
@@ -469,7 +469,7 @@ function Plan({ members, go, onTab, leader, totalVotes, pollStatus, expenseLogge
               <Photo className="strip" src={leader.photo || 'img/ramiro-wide.jpg'} alt={leader.name} fallback={<div className="strip" style={{ background: 'var(--beige)' }} />} />
               <div className="h">
                 <div className="txt"><div style={{ fontWeight: 700, fontSize: 15 }}>{leader.name}</div><div className="meta">Won {totalVotes} of {members.length} · 19:30 · 12 min walk</div></div>
-                <img src="img/map.jpg" alt="Map" />
+                <a className="icon-btn" href={mapsUrl(leader.name)} target="_blank" rel="noreferrer" aria-label={`Open ${leader.name} in Google Maps`} style={{ width: 44, height: 44 }}><Icon name="map" style={{ fontSize: 22 }} /></a>
               </div>
               <div className="chips">
                 <a className="chip" href={directionsUrl(leader.name)} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}><Icon name="directions_walk" />Directions</a>

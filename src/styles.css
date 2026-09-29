@@ -291,6 +291,7 @@ html:not(.icons-ready) .ms { visibility: hidden; }
 .winner .h { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
 .winner .h .txt { flex: 1; }
 .winner .h img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; }
+.winner .h .icon-btn { flex: none; }
 .winner .chips { margin-top: 12px; }
 .tag { font-size: 10px; font-weight: 700; border: 1.2px solid var(--ink); border-radius: 999px; padding: 3px 8px; }
 .suggest { background: var(--beige); border-radius: 20px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
