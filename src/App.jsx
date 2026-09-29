@@ -336,7 +336,7 @@ function Chat({ members, options, votes, totalVotes, onOpen, go }) {
   const [push, setPush] = useState(true)
   useEffect(() => { const t = setTimeout(() => setPush(false), 6000); return () => clearTimeout(t) }, [])
   return (
-    <div className="screen chat">
+    <div className="screen chat" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.22), rgba(255,255,255,.22)), url(img/chat-wallpaper.jpg)' }}>
       <StatusBar />
       {push && (
         <button className="push" onClick={onOpen}>
