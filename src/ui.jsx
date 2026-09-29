@@ -167,3 +167,22 @@ export function Section({ children, right, onRight }) {
     </div>
   )
 }
+
+
+// AI affordances. Every AI output in TripUp is a suggestion: editable, dismissable, never auto-applied.
+export function AIBadge({ children = 'TripUp AI', onClick }) {
+  const inner = <><Icon name="auto_awesome" style={{ fontSize: 14 }} />{children}</>
+  return onClick
+    ? <button className="ai-badge" onClick={onClick}>{inner}</button>
+    : <span className="ai-badge">{inner}</span>
+}
+
+export function AIThinking({ label = 'Thinking' }) {
+  return (
+    <div className="ai-thinking" role="status" aria-live="polite">
+      <Icon name="auto_awesome" style={{ fontSize: 16 }} />
+      <span>{label}</span>
+      <i /><i /><i />
+    </div>
+  )
+}

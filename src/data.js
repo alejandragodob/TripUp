@@ -109,3 +109,6 @@ export const PLACES = [
 
 export const mapsUrl = (name) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(name + ', Lisboa')
 export const directionsUrl = (name) => 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(name + ', Lisboa') + '&travelmode=walking'
+
+// The default poll options are the first three wishlist places; give them the same fields (saved, walk, open).
+for (const o of OPTIONS) Object.assign(o, PLACES.find((p) => p.id === o.id) || {}, { votes: o.votes })

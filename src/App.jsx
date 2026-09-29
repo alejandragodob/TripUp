@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { MEMBERS, REN, TRIP, OTHER_TRIPS, ITINERARY, OPTIONS, EXPENSE, BALANCES, RAILS, PLACES, mapsUrl, directionsUrl } from './data.js'
-import { Icon, StatusBar, TopBar, Avatar, AvatarStack, Pill, Chip, Row, TabBar, Sheet, Toast, Section, Photo, RailLogo } from './ui.jsx'
+import { Icon, StatusBar, TopBar, Avatar, AvatarStack, Pill, Chip, Row, TabBar, Sheet, Toast, Section, Photo, RailLogo, AIBadge, AIThinking } from './ui.jsx'
 
 const byId = (list, id) => list.find((m) => m.id === id)
 const names = (list, ids) => ids.map((id) => (id === 'A' ? 'You' : byId(list, id)?.name)).filter(Boolean)
@@ -33,16 +33,21 @@ export default function App() {
   const notVoted = members.filter((m) => !options.some((o) => v(o.id).includes(m.id)))
   const majority = v(leader.id).length > members.length / 2
 
-  // Live poll simulation: Theo votes for the leader ~4s after the poll opens on screen.
+  // Live poll simulation: while the poll is open on screen, friends who haven't voted send their votes in
+  // one by one (first to the leader, one to a runner-up, then the leader) until a majority exists.
   useEffect(() => {
     if (screen !== 'poll' || pollStatus !== 'live') return
-    if (options.some((o) => v(o.id).includes('T'))) return
+    const pending = members.filter((m) => m.id !== 'A' && !options.some((o) => v(o.id).includes(m.id)))
+    if (!pending.length || majority) return
     const t = setTimeout(() => {
-      setVotes((vv) => ({ ...vv, [leader.id]: [...(vv[leader.id] || []), 'T'] }))
-      say('Theo voted · ' + leader.name)
-    }, 4000)
+      const who = pending[0]
+      const count = options.reduce((n, o) => n + v(o.id).length, 0)
+      const target = (count % 4 === 1 && options[1]) ? options[1] : leader
+      setVotes((vv) => ({ ...vv, [target.id]: [...(vv[target.id] || []), who.id] }))
+      say(`${who.name} voted · ${target.name}`)
+    }, pending.length === 1 ? 4000 : 1800)
     return () => clearTimeout(t)
-  }, [screen, pollStatus]) // eslint-disable-line
+  }, [screen, pollStatus, votes, options]) // eslint-disable-line
 
   const castVote = (id) => {
     if (pollStatus !== 'live') return
@@ -77,7 +82,7 @@ export default function App() {
     go('home', true); say('Demo reset. Lisbon, day 4, 18:52')
   }
 
-  const shared = { members, go, say, onTab, openSheet: setSheet, pollStatus }
+  const shared = { members, go, say, onTab, openSheet: setSheet, pollStatus, votes, notVoted, leader, paid, expenseLogged }
 
   return (
     <div className="stage">
@@ -94,6 +99,7 @@ export default function App() {
         {screen === 'balances' && <Balances {...shared} paid={paid} onPick={(t) => setSettle(t)} />}
         {screen === 'settled' && <Settled {...shared} paid={paid} onNext={restart} />}
 
+        {sheet === 'ask' && <AskSheet members={members} pollStatus={pollStatus} notVoted={notVoted} leader={leader} paid={paid} expenseLogged={expenseLogged} onClose={() => setSheet(null)} go={go} />}
         {sheet === 'notifications' && <Notifications members={members} pollStatus={pollStatus} expenseLogged={expenseLogged} onClose={() => setSheet(null)} go={go} />}
         {sheet === 'newTrip' && <NewTrip onClose={() => setSheet(null)} say={say} />}
         {sheet === 'addRen' && <AddRen members={members} renIn={renIn} onClose={() => setSheet(null)} onAdd={addRen} onPreview={() => go('ren')} />}
@@ -184,6 +190,10 @@ function Trip({ members, go, onTab, openAdd, renIn, pollStatus, openSheet }) {
             <Pill onClick={() => go('plan')}>See tonight's plan</Pill>
           </>}
         </div>
+        <div className="chips" style={{ marginTop: 12 }}>
+          <Chip icon="auto_awesome" onClick={() => openSheet('ask')}>Ask TripUp</Chip>
+          <Chip icon="notifications" onClick={() => openSheet('notifications')}>Notifications</Chip>
+        </div>
         <Section right="Full plan" onRight={() => go('plan')}>Today</Section>
         <div className="stack">
           {ITINERARY.map((i) => <Row key={i.id} iconText={i.time} bg={i.bg} fg={i.fg} photo={i.photo} label={i.label} title={i.title} meta={i.id === 'lx' ? i.meta : undefined} onClick={() => go('plan')} />)}
@@ -254,6 +264,16 @@ function RenSide({ members, go, onJoin }) {
 /* ---------- 04 Create poll ---------- */
 function CreatePoll({ go, options, setOptions, onSend, say }) {
   const [src, setSrc] = useState('wishlist')
+  const [why, setWhy] = useState(false)
+  const [thinking, setThinking] = useState(false)
+  const regenerate = () => {
+    setThinking(true)
+    setTimeout(() => {
+      const pool = PLACES.filter((pl) => pl.open && !options.some((o) => o.id === pl.id))
+      const pick = [...pool].sort((a, b) => (b.saved.length - a.saved.length) || (a.walk - b.walk)).slice(0, 3)
+      setOptions(pick); setThinking(false); setWhy(false); say('Three new options drafted')
+    }, 1100)
+  }
   const [q, setQ] = useState('')
   const inPoll = (pl) => options.some((o) => o.id === pl.id)
   const add = (pl) => { if (inPoll(pl)) return; if (options.length >= 4) { say('Four options is plenty for one poll'); return } setOptions([...options, pl]); say(`${pl.name} added to the poll`) }
@@ -268,6 +288,11 @@ function CreatePoll({ go, options, setOptions, onSend, say }) {
       <TopBar onBack={() => go('trip', true)} label="Draft · edit anything" />
       <div className="scroll has-sticky">
         <h1 className="title">Where for<span className="sub">dinner?</span></h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '-4px 0 12px' }}>
+          <AIBadge onClick={() => setWhy(true)}>Drafted by TripUp AI · why these?</AIBadge>
+          <button className="caption" style={{ fontWeight: 700, color: 'var(--ink)', minHeight: 32 }} onClick={regenerate}>Regenerate</button>
+        </div>
+        {thinking && <div style={{ marginBottom: 12 }}><AIThinking label="Rebalancing vibe, price and distance" /></div>}
         <div className="stack">
           {options.map((o) => (
             <div key={o.id} className="card draft">
@@ -327,6 +352,26 @@ function CreatePoll({ go, options, setOptions, onSend, say }) {
         </div>
       </div>
       <div className="sticky"><Pill onClick={onSend} disabled={options.length < 2}>{options.length < 2 ? 'Add at least two places' : 'Send to the group'}</Pill></div>
+      {why && (
+        <Sheet onClose={() => setWhy(false)}>
+          <div style={{ marginBottom: 8 }}><AIBadge /></div>
+          <h1 className="title sm" style={{ margin: '6px 0 14px' }}>Why these three<span className="sub">and not the other four</span></h1>
+          <div className="stack">
+            {options.map((o) => (
+              <div key={o.id} className="card" style={{ padding: '12px 14px' }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{o.name}</div>
+                <div className="stack" style={{ gap: 6 }}>
+                  <div className="reason"><Icon name="bookmark" />{o.saved.length ? `${o.source}. ${o.saved.length > 1 ? 'Most-saved place in the group.' : 'On one wishlist.'}` : 'Pasted into the chat, so someone wanted it seen.'}</div>
+                  <div className="reason"><Icon name="directions_walk" />{o.walk} min walk from the house{o.open ? ', open now' : ''}.</div>
+                  <div className="reason"><Icon name="tune" />{o.id === 'ramiro' ? 'Seafood at €€: the group\'s usual budget.' : o.id === 'taberna' ? 'Petiscos at €€: a different vibe from Ramiro.' : 'Food hall at €: the cheap, no-argument option.'}</div>
+                </div>
+              </div>
+            ))}
+            <p className="caption">Skipped: Zé da Mouraria (lunch only), Ponto Final (35 min), Belcanto (€€€€), Prado (same vibe as Taberna). Add any of them from the list below.</p>
+            <Pill onClick={() => { setWhy(false); regenerate() }} icon="refresh">Draft three others</Pill>
+          </div>
+        </Sheet>
+      )}
     </div>
   )
 }
@@ -384,6 +429,10 @@ function Chat({ members, options, votes, totalVotes, onOpen, go }) {
 /* ---------- 06 Live poll ---------- */
 function LivePoll({ members, go, onTab, options, votes, totalVotes, notVoted, leader, majority, status, castVote, onClose, say }) {
   const closed = status === 'closed'
+  const [nudge, setNudge] = useState(false)
+  const who = names(members, notVoted.map((m) => m.id))
+  const [draft, setDraft] = useState('')
+  const openNudge = () => { setDraft(`Hey ${who.join(' and ')}, ${totalVotes} of us have voted and ${leader.name} is leading. Cast yours so we can close the poll and book a table for 19:30.`); setNudge(true) }
   return (
     <div className="screen">
       <StatusBar />
@@ -397,7 +446,7 @@ function LivePoll({ members, go, onTab, options, votes, totalVotes, notVoted, le
           <div className="meta" style={{ margin: '12px 0 12px' }}>Tonight 19:30 · asked by Ari · <b style={{ color: 'var(--ink)' }}>{closed ? 'closed' : `${totalVotes} of ${members.length} voted`}</b></div>
           <div className="chips">
             <Chip icon="chat" onClick={() => go('chat')}>Share to chat</Chip>
-            {notVoted.length > 0 && !closed && <Chip icon="notifications_active" onClick={() => say(`Nudged ${names(members, notVoted.map((m) => m.id)).join(' & ')}`)}>Nudge {names(members, notVoted.map((m) => m.id)).join(' & ')}</Chip>}
+            {notVoted.length > 0 && !closed && <Chip icon="notifications_active" onClick={openNudge}>Nudge {who.join(' & ')}</Chip>}
           </div>
         </div>
         <Section>Options</Section>
@@ -431,6 +480,15 @@ function LivePoll({ members, go, onTab, options, votes, totalVotes, notVoted, le
           ? <Pill onClick={() => go('plan')}>See tonight's plan</Pill>
           : <Pill onClick={onClose} disabled={!majority}>{majority ? `Close poll · ${leader.name.split(' ').pop()} wins` : 'Close poll · needs a majority'}</Pill>}
       </div>
+      {nudge && (
+        <Sheet onClose={() => setNudge(false)}>
+          <div style={{ marginBottom: 8 }}><AIBadge>Drafted by TripUp AI · edit anything</AIBadge></div>
+          <h1 className="title sm" style={{ margin: '6px 0 14px' }}>Nudge {who.join(' & ')}<span className="sub">goes to the chat</span></h1>
+          <textarea className="ai-draft" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="Nudge message" />
+          <p className="caption" style={{ margin: '10px 0 14px' }}>Sent as you, in the group chat, with the poll card attached. Nobody sees it was drafted.</p>
+          <Pill onClick={() => { setNudge(false); say(`Nudge sent to ${who.join(' & ')}`) }} icon="send">Send to the chat</Pill>
+        </Sheet>
+      )}
     </div>
   )
 }
@@ -491,7 +549,7 @@ function Plan({ members, go, onTab, leader, totalVotes, pollStatus, expenseLogge
           )}
           <div className="suggest">
             <img src="img/miradouro.jpg" alt="" />
-            <div><div className="k">AFTER DINNER · SUGGESTION</div><div className="t">Miradouro da Graça · 8 min</div><div className="s">Saved by Sam</div></div>
+            <div><div className="k" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon name="auto_awesome" style={{ fontSize: 12, color: '#7A2E9E' }} />AFTER DINNER · TRIPUP AI</div><div className="t">Miradouro da Graça · 8 min</div><div className="s">Saved by Sam · fits the 21:30 gap · sunset view</div></div>
             <Chip onClick={() => say('Poll drafted for after dinner')}>Poll it</Chip>
           </div>
           {won && !expenseLogged && (
@@ -511,20 +569,30 @@ function Plan({ members, go, onTab, leader, totalVotes, pollStatus, expenseLogge
 /* ---------- 08 Log expense ---------- */
 function Expense({ members, go, wineOut, setWineOut, onSave }) {
   const wine = EXPENSE.items[1]
+  const [reading, setReading] = useState(true)
+  const [whyWine, setWhyWine] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setReading(false), 1400); return () => clearTimeout(t) }, [])
   const payers = members.filter((m) => !wineOut.includes(m.id))
   const each = (wine.amount / Math.max(payers.length, 1)).toFixed(0)
   const toggle = (id) => setWineOut(wineOut.includes(id) ? wineOut.filter((x) => x !== id) : [...wineOut, id])
   return (
     <div className="screen">
       <StatusBar />
-      <TopBar onBack={() => go('plan', true)} label="Receipt scanned" />
+      <TopBar onBack={() => go('plan', true)} label={reading ? 'Reading receipt' : 'Receipt scanned'} />
       <div className="scroll has-sticky">
         <h1 className="title">Dinner at<span className="sub">Ramiro</span></h1>
-        <div className="card total">
+        <div className={`card total ${reading ? 'scan' : ''}`}>
           <div><div className="k">TOTAL</div><div className="v">€{EXPENSE.total}.00</div><div className="meta">Paid by you · {members.length} people</div></div>
           <img src="img/ramiro.jpg" alt="Receipt" />
         </div>
         <Section>Split by item</Section>
+        {reading ? (
+          <div className="stack">
+            <AIThinking label="Reading 7 lines into items" />
+            <div className="shimmer" style={{ height: 66 }} />
+            <div className="shimmer" style={{ height: 150 }} />
+          </div>
+        ) : (
         <div className="stack">
           <div className="card item">
             <div className="h"><span>Food</span><span>€166</span></div>
@@ -543,11 +611,16 @@ function Expense({ members, go, wineOut, setWineOut, onSave }) {
                 )
               })}
             </div>
-            <div className="note">{wine.note}</div>
+            <div className="note" style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <Icon name="auto_awesome" style={{ fontSize: 16, color: '#7A2E9E', flex: 'none', marginTop: 1 }} />
+              <span>{wine.note} <button className="tap" style={{ fontWeight: 700, color: '#7A2E9E', minHeight: 0, display: 'inline' }} onClick={() => setWhyWine(!whyWine)}>{whyWine ? 'Hide' : 'Why?'}</button></span>
+            </div>
+            {whyWine && <div className="qa" style={{ marginTop: 8 }}><div className="a">On 3 of the last 4 dinners this group logged, Nic and Ren were left out of the wine line. TripUp suggests the same split and never applies it without you. Tap a name to change it.</div></div>}
           </div>
         </div>
+        )}
       </div>
-      <div className="sticky"><Pill onClick={onSave}>Save · updates {members.length} balances</Pill></div>
+      <div className="sticky"><Pill onClick={onSave} disabled={reading}>{reading ? 'Reading receipt' : `Save · updates ${members.length} balances`}</Pill></div>
     </div>
   )
 }
@@ -555,6 +628,8 @@ function Expense({ members, go, wineOut, setWineOut, onSave }) {
 /* ---------- 09 Balances ---------- */
 function Balances({ members, go, onTab, paid, onPick, say }) {
   const [why, setWhy] = useState(true)
+  const [msg, setMsg] = useState(null)
+  const draftMsg = () => setMsg(BALANCES.transfers.filter((t) => !paid[t.id]).map((t) => `${byId(members, t.from)?.name} → ${t.to === 'A' ? 'Ari' : byId(members, t.to)?.name} €${t.amount}`).join('\n') + '\n\nApple Pay, Revolut or IBAN, whatever is easiest. Tap the card to pay in one go.')
   const unpaid = BALANCES.transfers.filter((t) => !paid[t.id])
   const toYou = unpaid.filter((t) => t.to === 'A')
   return (
@@ -581,6 +656,13 @@ function Balances({ members, go, onTab, paid, onPick, say }) {
             )
           })}
           {why && <div className="panel" style={{ padding: '12px 14px' }}><p style={{ margin: 0, textAlign: 'left', fontSize: 12 }}>{BALANCES.explainer}</p></div>}
+          {unpaid.length > 0 && (
+            <button className="card row" onClick={draftMsg}>
+              <span className="ic" style={{ background: 'linear-gradient(135deg, #F3E8FF, #FFE8F3)', color: '#7A2E9E' }}><Icon name="auto_awesome" /></span>
+              <span className="txt"><span className="t" style={{ display: 'block' }}>Settle up in one message</span><span className="m" style={{ display: 'block' }}>TripUp drafts who pays whom, you post it to the chat</span></span>
+              <span className="arrow"><Icon name="arrow_forward" /></span>
+            </button>
+          )}
           <div className="chips">
             {toYou.length > 0 && <Chip icon="notifications_active" onClick={() => say(`Nudged ${toYou.map((t) => byId(members, t.from)?.name).join(' & ')}`)}>Nudge {toYou.map((t) => byId(members, t.from)?.name).join(' & ')}</Chip>}
             <Chip onClick={() => unpaid[0] && onPick(unpaid[0])}>Paid in cash?</Chip>
@@ -589,6 +671,15 @@ function Balances({ members, go, onTab, paid, onPick, say }) {
         </div>
       </div>
       <TabBar active="Money" onTab={onTab} />
+      {msg !== null && (
+        <Sheet onClose={() => setMsg(null)}>
+          <div style={{ marginBottom: 8 }}><AIBadge>Drafted by TripUp AI · edit anything</AIBadge></div>
+          <h1 className="title sm" style={{ margin: '6px 0 14px' }}>Settle up<span className="sub">one message to the group</span></h1>
+          <textarea className="ai-draft" style={{ minHeight: 150 }} value={msg} onChange={(e) => setMsg(e.target.value)} aria-label="Settle-up message" />
+          <p className="caption" style={{ margin: '10px 0 14px' }}>Posted as you with a live balances card. Each person sees only what they owe, and a pay button.</p>
+          <Pill onClick={() => { setMsg(null); say('Posted to the group chat') }} icon="send">Post to the chat</Pill>
+        </Sheet>
+      )}
     </div>
   )
 }
@@ -675,6 +766,47 @@ function NewTrip({ onClose, say }) {
         <div className="field"><Icon name="hotel" style={{ color: 'var(--grey)' }} /><span style={{ flex: 1, color: 'var(--grey)' }}>Stay (optional)</span></div>
         <p className="caption" style={{ margin: 0 }}>Creating the trip makes you the organizer. Anyone can still add anything.</p>
         <Pill onClick={() => { onClose(); say('Trip creation is mocked in this demo') }}>Create and invite</Pill>
+      </div>
+    </Sheet>
+  )
+}
+
+
+/* ---------- Ask TripUp (assistant) ---------- */
+function AskSheet({ members, pollStatus, notVoted, leader, paid, expenseLogged, onClose, go }) {
+  const [q, setQ] = useState(null)
+  const [thinking, setThinking] = useState(false)
+  const unpaid = BALANCES.transfers.filter((t) => !paid[t.id])
+  const answers = {
+    tonight: pollStatus === 'closed' ? [`Dinner at ${leader.name}, 19:30, ${members.length} going. 12 minutes on foot. Directions and booking are in the plan.`, 'plan']
+      : pollStatus === 'live' ? [`The dinner poll is live. ${leader.name} is leading; ${notVoted.length ? notVoted.map((m) => m.name).join(' and ') + (notVoted.length > 1 ? " haven't" : " hasn't") + ' voted yet.' : 'Everyone has voted.'}`, 'poll']
+      : ['Nothing is booked yet. Three wishlist places are ready to poll: Ramiro, Taberna da Rua das Flores and Time Out Market.', 'createPoll'],
+    votes: pollStatus === 'draft' ? ['No poll is open. Start one and I will draft three options from the wishlist.', 'createPoll']
+      : notVoted.length ? [`${notVoted.map((m) => m.name).join(' and ')} ${notVoted.length > 1 ? 'have' : 'has'} not voted. Want me to draft a nudge?`, 'poll'] : ['Everyone has voted. You can close the poll.', 'poll'],
+    money: expenseLogged
+      ? unpaid.length ? [`${unpaid.length} transfer${unpaid.length > 1 ? 's' : ''} still open: ${unpaid.map((t) => `${byId(members, t.from)?.name} €${t.amount}`).join(', ')}. You are owed €${BALANCES.youOwed} in total.`, 'balances'] : ['Everything is settled. Lisbon is squared up.', 'settled']
+      : ['Before tonight: you are owed €42 (LX Factory, logged by Maya). Log the dinner after and I will split it.', 'balances'],
+    ren: [members.some((m) => m.id === 'R') ? 'Ren is in for tonight only. She joined via your link, votes and pays from the chat, and is excluded from earlier expenses.' : 'Ren is not in the trip yet. Tap + on the group photo to send her the join link.', 'trip'],
+  }
+  const ask = (k) => { setThinking(true); setQ(null); setTimeout(() => { setThinking(false); setQ(k) }, 700) }
+  const Q = ({ k, children }) => <button className="q" onClick={() => ask(k)}><Icon name="auto_awesome" />{children}</button>
+  return (
+    <Sheet onClose={onClose}>
+      <div style={{ marginBottom: 8 }}><AIBadge /></div>
+      <h1 className="title sm" style={{ margin: '6px 0 4px' }}>Ask TripUp<span className="sub">about Lisbon</span></h1>
+      <p className="meta" style={{ margin: '0 0 14px' }}>Answers come from the trip itself: plan, poll, expenses. Nothing leaves the group.</p>
+      <div className="qa">
+        <Q k="tonight">What's happening tonight?</Q>
+        <Q k="votes">Who hasn't voted?</Q>
+        <Q k="money">What's still unpaid?</Q>
+        <Q k="ren">Is Ren in?</Q>
+        {thinking && <AIThinking label="Checking the trip" />}
+        {q && !thinking && (
+          <div className="a">
+            {answers[q][0]}
+            <div style={{ marginTop: 10 }}><Chip onClick={() => { onClose(); go(answers[q][1]) }} icon="arrow_forward">Open</Chip></div>
+          </div>
+        )}
       </div>
     </Sheet>
   )
