@@ -208,7 +208,7 @@ html:not(.icons-ready) .ms { visibility: hidden; }
 .or { text-align: center; font-size: 12px; color: var(--grey); margin: 4px 0; }
 
 /* Chat mock */
-.chat { position: absolute; inset: 0; background: #E5DDD5; display: flex; flex-direction: column; background-image: radial-gradient(rgba(0,0,0,.05) 1px, transparent 1px); background-size: 18px 18px; }
+.chat { position: absolute; inset: 0; background: #EFE7DD url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><g fill='none' stroke='%23C7BAA9' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round' opacity='.55'><circle cx='24' cy='28' r='7'/><path d='M60 18l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z'/><path d='M110 30c0-6 10-6 10 0 0 6-10 12-10 12s-10-6-10-12c0-6 10-6 10 0'/><path d='M140 70l-18 8 8 4 3 9z'/><path d='M20 84h18a8 8 0 1 0-2-15 10 10 0 0 0-19 3 6 6 0 0 0 3 12z'/><rect x='66' y='72' width='26' height='18' rx='4'/><circle cx='79' cy='81' r='5'/><path d='M120 120a10 10 0 1 0 12 0'/><path d='M28 128c6-10 18-10 24 0M40 118v14'/><path d='M100 140h30M100 148h20'/><path d='M64 130l14-6 6 14z'/><path d='M150 100c-8 4-8 12 0 16'/></g></svg>") repeat; background-size: 160px 160px; display: flex; flex-direction: column; }
 .chat .status { background: #F6F6F6; }
 .chat .head { background: #F6F6F6; border-bottom: 1px solid #ddd; padding: 6px 12px 10px; display: flex; align-items: center; gap: 10px; }
 .chat .head .t { font-weight: 700; font-size: 15px; }
@@ -319,3 +319,26 @@ html:not(.icons-ready) .ms { visibility: hidden; }
 .section .right { min-height: 32px; padding: 0 4px; display: inline-flex; align-items: center; }
 .section .right::after { content: ''; position: absolute; inset: -8px; }
 .section .right { position: relative; }
+
+/* Poll option rows in the draft (create poll) */
+.draft { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; }
+.draft img, .draft .ph { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; flex: none; background: var(--beige); display: grid; place-items: center; color: var(--grey); }
+.draft .txt { flex: 1; min-width: 0; }
+.draft .n { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.draft .m { font-size: 12px; color: var(--grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.draft .src { font-size: 12px; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 6px; margin-top: 4px; white-space: nowrap; overflow: hidden; }
+.draft .acts { display: flex; flex-direction: column; gap: 6px; flex: none; }
+.gbadge { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 1px solid var(--hair); font-size: 9px; font-weight: 700; display: grid; place-items: center; color: #4285F4; flex: none; }
+.icon-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--beige); color: var(--ink); display: grid; place-items: center; position: relative; text-decoration: none; }
+.icon-btn::after { content: ''; position: absolute; inset: -5px; border-radius: inherit; }
+.icon-btn .ms { font-size: 18px; }
+.icon-btn.add { background: var(--ink); color: #fff; }
+.search { display: flex; align-items: center; gap: 10px; background: var(--white); border: 1.5px solid var(--ink); border-radius: 14px; padding: 10px 14px; margin-bottom: 12px; }
+.search input { flex: 1; border: 0; background: none; font: inherit; font-size: 15px; color: var(--ink); outline: none; min-width: 0; }
+.search input::placeholder { color: var(--grey); }
+.result { display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 14px; }
+.result .txt { flex: 1; min-width: 0; }
+.result .n { font-weight: 700; font-size: 14px; }
+.result .m { font-size: 12px; color: var(--grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.result .n .in { font-size: 10px; font-weight: 700; color: var(--green); margin-left: 6px; }
+.event-thumb { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; flex: none; }

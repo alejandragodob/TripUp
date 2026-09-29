@@ -26,12 +26,52 @@ export function TopBar({ onBack, right, label, left }) {
   )
 }
 
+// Photo avatar when the file exists (public/img/avatars/<name>.jpg), initials otherwise.
+const missing = new Set()
 export function Avatar({ m, size = 26, ring, dim, className = '' }) {
+  const [broken, setBroken] = React.useState(() => !m.photo || missing.has(m.photo))
   return (
-    <span className={`av ${dim ? 'dim' : ''} ${className}`} style={{ width: size, height: size, fontSize: size * 0.42, background: m.color, '--ring': ring }}>
-      {m.initial}
+    <span className={`av ${dim ? 'dim' : ''} ${className}`} style={{ width: size, height: size, fontSize: size * 0.42, background: m.color, '--ring': ring, overflow: 'hidden' }}>
+      {!broken && <img src={m.photo} alt={m.name} width={size} height={size} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={() => { missing.add(m.photo); setBroken(true) }} />}
+      {broken && m.initial}
     </span>
   )
+}
+
+// Photo with a graceful fallback (used for event thumbnails).
+export function Photo({ src, alt = '', fallback, className = '', style }) {
+  const [broken, setBroken] = React.useState(!src)
+  if (broken) return fallback
+  return <img src={src} alt={alt} className={className} style={style} onError={() => setBroken(true)} />
+}
+
+// Payment rail marks. Wordmarks and the Apple glyph are drawn inline so they render offline.
+export function RailLogo({ id, size = 46 }) {
+  const box = { width: size, height: size, borderRadius: '50%', display: 'grid', placeItems: 'center', flex: 'none' }
+  if (id === 'applepay') return (
+    <span style={{ ...box, background: '#000', color: '#fff' }} aria-label="Apple Pay">
+      <svg width={size * 0.62} height={size * 0.3} viewBox="0 0 62 30" fill="none" aria-hidden="true">
+        <path fill="#fff" d="M13.7 5.3c-.8 1-2.1 1.7-3.3 1.6-.2-1.3.5-2.6 1.2-3.4.8-1 2.2-1.7 3.3-1.7.1 1.3-.4 2.6-1.2 3.5Zm1.2 1.9c-1.8-.1-3.4 1-4.2 1-.9 0-2.2-1-3.6-.9-1.9 0-3.6 1.1-4.5 2.8-2 3.4-.5 8.4 1.4 11.1.9 1.3 2 2.8 3.5 2.8 1.4-.1 1.9-.9 3.6-.9s2.2.9 3.6.9c1.5 0 2.5-1.3 3.4-2.7 1.1-1.5 1.5-3 1.5-3.1 0 0-2.9-1.1-3-4.5 0-2.8 2.3-4.2 2.4-4.2-1.3-1.9-3.3-2.2-4.1-2.3Z"/>
+        <text x="24" y="21" fill="#fff" fontFamily="Figtree, system-ui, sans-serif" fontSize="19" fontWeight="600" letterSpacing="-0.5">Pay</text>
+      </svg>
+    </span>
+  )
+  if (id === 'revolut') return (
+    <span style={{ ...box, background: '#000', color: '#fff' }} aria-label="Revolut">
+      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="#fff" d="M5 2h8.2c3.6 0 6.3 2.4 6.3 5.9 0 2.9-1.9 5-4.6 5.7L20 22h-4.6l-4.7-8h-1.6v8H5V2Zm4.1 3.6v5h3.7c1.6 0 2.7-1 2.7-2.5s-1.1-2.5-2.7-2.5H9.1Z"/>
+      </svg>
+    </span>
+  )
+  if (id === 'wise') return (
+    <span style={{ ...box, background: '#9FE870', color: '#163300' }} aria-label="Wise">
+      <svg width={size * 0.62} height={size * 0.3} viewBox="0 0 60 30" aria-hidden="true">
+        <text x="2" y="22" fill="#163300" fontFamily="Figtree, system-ui, sans-serif" fontSize="21" fontWeight="800" letterSpacing="-1">wise</text>
+      </svg>
+    </span>
+  )
+  if (id === 'bank') return <span style={{ ...box, background: 'var(--beige)' }}><Icon name="account_balance" style={{ fontSize: 22 }} /></span>
+  return <span style={{ ...box, background: 'var(--beige)' }}><Icon name="payments" style={{ fontSize: 22 }} /></span>
 }
 
 export function AvatarStack({ members, size = 26, ring, dim = [], onAdd }) {

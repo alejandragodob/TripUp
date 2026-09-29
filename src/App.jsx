@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { MEMBERS, REN, TRIP, OTHER_TRIPS, ITINERARY, OPTIONS, EXPENSE, BALANCES, RAILS } from './data.js'
-import { Icon, StatusBar, TopBar, Avatar, AvatarStack, Pill, Chip, Row, TabBar, Sheet, Toast, Section } from './ui.jsx'
+import { MEMBERS, REN, TRIP, OTHER_TRIPS, ITINERARY, OPTIONS, EXPENSE, BALANCES, RAILS, PLACES, mapsUrl, directionsUrl } from './data.js'
+import { Icon, StatusBar, TopBar, Avatar, AvatarStack, Pill, Chip, Row, TabBar, Sheet, Toast, Section, Photo, RailLogo } from './ui.jsx'
 
 const byId = (list, id) => list.find((m) => m.id === id)
 const names = (list, ids) => ids.map((id) => (id === 'A' ? 'You' : byId(list, id)?.name)).filter(Boolean)
@@ -26,18 +26,19 @@ export default function App() {
   const renIn = members.some((m) => m.id === 'R')
   const addRen = () => { if (!renIn) setMembers([...members, REN]); setSheet(null); say('Ren joined · 6 in Lisbon') }
 
-  const totalVotes = Object.values(votes).reduce((n, v) => n + v.length, 0)
-  const sorted = useMemo(() => [...options].sort((a, b) => votes[b.id].length - votes[a.id].length), [options, votes])
+  const v = (id) => votes[id] || []
+  const totalVotes = options.reduce((n, o) => n + v(o.id).length, 0)
+  const sorted = useMemo(() => [...options].sort((a, b) => (votes[b.id] || []).length - (votes[a.id] || []).length), [options, votes])
   const leader = sorted[0]
-  const notVoted = members.filter((m) => !Object.values(votes).some((v) => v.includes(m.id)))
-  const majority = votes[leader.id].length > members.length / 2
+  const notVoted = members.filter((m) => !options.some((o) => v(o.id).includes(m.id)))
+  const majority = v(leader.id).length > members.length / 2
 
   // Live poll simulation: Theo votes for the leader ~4s after the poll opens on screen.
   useEffect(() => {
     if (screen !== 'poll' || pollStatus !== 'live') return
-    if (Object.values(votes).some((v) => v.includes('T'))) return
+    if (options.some((o) => v(o.id).includes('T'))) return
     const t = setTimeout(() => {
-      setVotes((v) => ({ ...v, [leader.id]: [...v[leader.id], 'T'] }))
+      setVotes((vv) => ({ ...vv, [leader.id]: [...(vv[leader.id] || []), 'T'] }))
       say('Theo voted · ' + leader.name)
     }, 4000)
     return () => clearTimeout(t)
@@ -45,10 +46,10 @@ export default function App() {
 
   const castVote = (id) => {
     if (pollStatus !== 'live') return
-    setVotes((v) => {
+    setVotes((vv) => {
       const next = {}
-      for (const k of Object.keys(v)) next[k] = v[k].filter((m) => m !== 'A')
-      next[id] = [...next[id], 'A']
+      for (const k of Object.keys(vv)) next[k] = vv[k].filter((m) => m !== 'A')
+      next[id] = [...(next[id] || []), 'A']
       return next
     })
   }
@@ -126,7 +127,13 @@ function Home({ members, go, onTab, pollStatus, openSheet, say }) {
         </div>
         <Section>Coming up</Section>
         <div className="stack">
-          {OTHER_TRIPS.map((t) => <Row key={t.id} icon={t.icon} bg={t.bg} fg={t.fg} label={t.tag} title={t.title} meta={t.meta} onClick={() => say(t.id === 'primavera' ? 'Primavera opens Jun 3. Nothing to decide yet' : 'Dolomites is settled. Tap to see the archive')} />)}
+          {OTHER_TRIPS.map((t) => (
+            <button key={t.id} className="card row" onClick={() => say(t.id === 'primavera' ? 'Primavera opens Jun 3. Nothing to decide yet' : 'Dolomites is settled. Tap to see the archive')}>
+              <Photo src={t.photo} className="event-thumb" fallback={<span className="ic" style={{ background: t.bg, color: t.fg }}><Icon name={t.icon} /></span>} />
+              <span className="txt"><span className="l">{t.tag}</span><span className="t" style={{ display: 'block' }}>{t.title}</span><span className="m" style={{ display: 'block' }}>{t.meta}</span></span>
+              <span className="arrow"><Icon name="arrow_forward" /></span>
+            </button>
+          ))}
           <div className="chips">
             <Chip icon="add" onClick={() => openSheet('newTrip')}>New trip</Chip>
             <Chip onClick={() => say('Reads your Splitwise groups. Mocked in this demo')}>Import from Splitwise</Chip>
@@ -245,46 +252,73 @@ function RenSide({ members, go, onJoin }) {
 }
 
 /* ---------- 04 Create poll ---------- */
-function CreatePoll({ go, options, setOptions, onSend }) {
+function CreatePoll({ go, options, setOptions, onSend, say }) {
   const [src, setSrc] = useState('wishlist')
-  const removed = OPTIONS.filter((o) => !options.includes(o))
+  const [q, setQ] = useState('')
+  const inPoll = (pl) => options.some((o) => o.id === pl.id)
+  const add = (pl) => { if (inPoll(pl)) return; if (options.length >= 4) { say('Four options is plenty for one poll'); return } setOptions([...options, pl]); say(`${pl.name} added to the poll`) }
+  const remove = (o) => setOptions(options.filter((x) => x.id !== o.id))
+  const wishlist = PLACES.filter((pl) => pl.saved.length > 0)
+  const near = PLACES.filter((pl) => pl.open && pl.walk <= 15).sort((x, y) => x.walk - y.walk)
+  const found = q.trim().length ? PLACES.filter((pl) => (pl.name + ' ' + pl.meta).toLowerCase().includes(q.trim().toLowerCase())) : []
+  const list = src === 'near' ? near.filter((pl) => !inPoll(pl)) : src === 'search' ? found : wishlist.filter((pl) => !inPoll(pl))
   return (
     <div className="screen">
       <StatusBar />
       <TopBar onBack={() => go('trip', true)} label="Draft · edit anything" />
       <div className="scroll has-sticky">
         <h1 className="title">Where for<span className="sub">dinner?</span></h1>
-        <div className="chips scroll-x">
-          <Chip icon="bookmark" solid={src === 'wishlist'} onClick={() => setSrc('wishlist')}>Wishlist · 7</Chip>
+        <div className="stack">
+          {options.map((o) => (
+            <div key={o.id} className="card draft">
+              <Photo src={o.photo} fallback={<span className="ph"><Icon name="restaurant" /></span>} />
+              <div className="txt">
+                <div className="n">{o.name}</div>
+                <div className="m">{o.meta}</div>
+                <div className="src"><span className="gbadge">G</span>{o.source}</div>
+              </div>
+              <div className="acts">
+                <a className="icon-btn" href={mapsUrl(o.name)} target="_blank" rel="noreferrer" aria-label={`Open ${o.name} in Google Maps`}><Icon name="map" /></a>
+                <button className="icon-btn" onClick={() => remove(o)} aria-label={`Remove ${o.name}`}><Icon name="close" /></button>
+              </div>
+            </div>
+          ))}
+          {options.length === 0 && <div className="empty"><Icon name="how_to_vote" />Add two or more places below.</div>}
+        </div>
+
+        <Section>Add a place</Section>
+        <div className="chips scroll-x" style={{ marginBottom: 12 }}>
+          <Chip icon="bookmark" solid={src === 'wishlist'} onClick={() => setSrc('wishlist')}>Wishlist · {wishlist.length}</Chip>
           <Chip icon="near_me" solid={src === 'near'} onClick={() => setSrc('near')}>Near me</Chip>
           <Chip icon="search" solid={src === 'search'} onClick={() => setSrc('search')}>Search Maps</Chip>
         </div>
-        <p className="caption" style={{ margin: '12px 0 14px' }}>
-          {src === 'wishlist' && 'From places your group saved in Google Maps. Nearby, open now, a spread of price and vibe.'}
-          {src === 'near' && 'Open now within a 15 minute walk of the house. Ranked by how many of you saved them.'}
-          {src === 'search' && 'Search Google Maps and drop any place in. It joins the wishlist for next time.'}
+        {src === 'search' && (
+          <div className="search">
+            <Icon name="search" style={{ color: 'var(--grey)' }} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search Google Maps in Lisbon" autoFocus aria-label="Search Google Maps" />
+            {q && <button onClick={() => setQ('')} aria-label="Clear"><Icon name="close" style={{ fontSize: 18, color: 'var(--grey)' }} /></button>}
+          </div>
+        )}
+        <p className="caption" style={{ margin: '0 0 12px' }}>
+          {src === 'wishlist' && "Places your group saved in Google Maps. Ranked by how many of you saved them, then walking time."}
+          {src === 'near' && 'Open now and within a 15 minute walk of the house.'}
+          {src === 'search' && (q ? `${found.length} result${found.length === 1 ? '' : 's'} on Google Maps` : 'Anything you add joins the wishlist for next time.')}
         </p>
         <div className="stack">
-          {options.map((o) => (
-            <div key={o.id} className="card row" style={{ cursor: 'default' }}>
-              <img src={o.photo} alt="" style={{ width: 60, height: 60, borderRadius: 14, objectFit: 'cover', flex: 'none' }} />
-              <span className="txt">
-                <span className="t" style={{ display: 'block' }}>{o.name}</span>
-                <span className="m" style={{ display: 'block' }}>{o.meta}</span>
-                <span className="m" style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--muted)', fontWeight: 600 }}>
-                  <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#fff', border: '1px solid var(--hair)', fontSize: 9, fontWeight: 700, display: 'grid', placeItems: 'center', color: '#4285F4' }}>G</span>
-                  {o.source}
-                </span>
-              </span>
-              <button className="circle-btn" style={{ background: 'var(--beige)' }} onClick={() => setOptions(options.filter((x) => x !== o))} aria-label={`Remove ${o.name}`}><Icon name="close" style={{ fontSize: 16 }} /></button>
+          {list.map((pl) => (
+            <div key={pl.id} className="card result">
+              <Photo src={pl.photo} fallback={<span className="ph" style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--beige)', display: 'grid', placeItems: 'center', color: 'var(--grey)', flex: 'none' }}><Icon name="restaurant" style={{ fontSize: 20 }} /></span>} style={{ width: 44, height: 44, borderRadius: 12, objectFit: 'cover', flex: 'none' }} />
+              <div className="txt">
+                <div className="n">{pl.name}{inPoll(pl) && <span className="in">IN THE POLL</span>}</div>
+                <div className="m">{src === 'near' ? `${pl.walk} min walk · ${pl.short.split(' · ')[0]} · ${pl.source}` : pl.meta}</div>
+              </div>
+              <a className="icon-btn" href={mapsUrl(pl.name)} target="_blank" rel="noreferrer" aria-label={`Open ${pl.name} in Google Maps`}><Icon name="map" /></a>
+              {!inPoll(pl) && <button className="icon-btn add" onClick={() => add(pl)} aria-label={`Add ${pl.name}`}><Icon name="add" /></button>}
             </div>
           ))}
-          <button className="row" style={{ background: 'var(--beige)', borderRadius: 20 }} onClick={() => removed.length && setOptions([...options, removed[0]])}>
-            <AvatarStack members={[MEMBERS[2], MEMBERS[1], MEMBERS[3]]} size={22} ring="var(--beige)" />
-            <span className="txt"><span className="t" style={{ fontSize: 13, fontWeight: 600 }}>{removed.length ? `${4 + removed.length} more on the wishlist · swap one in` : '4 more on the wishlist · swap one in'}</span></span>
-            <Icon name="chevron_right" />
-          </button>
+          {src === 'search' && q && found.length === 0 && <div className="empty">No match in Lisbon. Try a dish or a neighbourhood.</div>}
         </div>
+
         <Section>Settings</Section>
         <div className="card">
           <div className="row" style={{ justifyContent: 'space-between', padding: '14px 16px' }}><span className="t">Closes</span><span className="meta" style={{ color: 'var(--ink)', fontWeight: 600 }}>when everyone has voted</span></div>
@@ -292,7 +326,7 @@ function CreatePoll({ go, options, setOptions, onSend }) {
           <div className="row" style={{ justifyContent: 'space-between', padding: '14px 16px' }}><span className="t">Winner goes into tonight's plan</span><span className="meta" style={{ color: 'var(--ink)', fontWeight: 600 }}>19:30</span></div>
         </div>
       </div>
-      <div className="sticky"><Pill onClick={onSend} disabled={options.length < 2}>Send to the group</Pill></div>
+      <div className="sticky"><Pill onClick={onSend} disabled={options.length < 2}>{options.length < 2 ? 'Add at least two places' : 'Send to the group'}</Pill></div>
     </div>
   )
 }
@@ -329,10 +363,10 @@ function Chat({ members, options, votes, totalVotes, onOpen, go }) {
             <h4>Where for dinner?</h4>
             <p className="sub">Tap to vote · no app needed</p>
             {options.map((o, i) => (
-              <div key={o.id} className={`o ${i === 0 && votes[o.id].length ? 'lead' : ''}`}>
-                <img src={o.photo} alt="" />
+              <div key={o.id} className={`o ${i === 0 && (votes[o.id] || []).length ? 'lead' : ''}`}>
+                <Photo src={o.photo} fallback={<span style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--beige)', display: 'grid', placeItems: 'center', color: 'var(--grey)', flex: 'none' }}><Icon name="restaurant" style={{ fontSize: 18 }} /></span>} />
                 <div><div className="n">{o.name}</div><div className="m">{o.short}</div></div>
-                <span className={`c ${votes[o.id].length ? '' : 'zero'}`}>{votes[o.id].length}</span>
+                <span className={`c ${(votes[o.id] || []).length ? '' : 'zero'}`}>{(votes[o.id] || []).length}</span>
               </div>
             ))}
             <button className="vote" onClick={onOpen}>Vote</button>
@@ -369,19 +403,19 @@ function LivePoll({ members, go, onTab, options, votes, totalVotes, notVoted, le
         <Section>Options</Section>
         <div className="stack">
           {options.map((o, i) => {
-            const n = votes[o.id].length
+            const n = (votes[o.id] || []).length
             const lead = i === 0 && n > 0
             const pct = totalVotes ? (n / Math.max(totalVotes, members.length)) * 100 : 0
             return (
-              <button key={o.id} className={`card opt ${lead ? 'lead' : ''} ${votes[o.id].includes('A') ? 'you' : ''}`} onClick={() => castVote(o.id)}>
+              <div key={o.id} role="button" tabIndex={0} className={`card opt ${lead ? 'lead' : ''} ${(votes[o.id] || []).includes('A') ? 'you' : ''}`} onClick={() => castVote(o.id)} onKeyDown={(e) => e.key === 'Enter' && castVote(o.id)}>
                 <div className="head">
-                  <img src={o.photo} alt="" />
-                  <div className="txt"><div className="n">{o.name}</div><div className="m">{o.pollMeta}</div></div>
+                  <Photo src={o.photo} fallback={<span className="ph" style={{ width: 56, height: 56, borderRadius: 14, background: 'var(--beige)', display: 'grid', placeItems: 'center', color: 'var(--grey)', flex: 'none' }}><Icon name="restaurant" /></span>} />
+                  <div className="txt"><div className="n">{o.name}</div><div className="m">{o.pollMeta} · <a href={mapsUrl(o.name)} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} style={{ color: 'var(--ink)', fontWeight: 700, textDecoration: 'none' }}>Maps</a></div></div>
                   <div><div className={`count ${n ? '' : 'zero'}`}>{n}</div>{lead && <div className="leading">LEADING</div>}</div>
                 </div>
                 <div className={`bar ${lead ? 'lead' : ''}`}><i style={{ width: `${pct}%` }} /></div>
-                <div className="voters">{n ? names(members, votes[o.id]).join(', ') : 'No votes yet'}</div>
-              </button>
+                <div className="voters">{n ? names(members, votes[o.id] || []).join(', ') : 'No votes yet'}</div>
+              </div>
             )
           })}
         </div>
@@ -432,13 +466,13 @@ function Plan({ members, go, onTab, leader, totalVotes, pollStatus, expenseLogge
           <>
             <h1 className="title">Ramiro it is.<span className="sub">Added to tonight</span></h1>
             <div className="card winner">
-              <img className="strip" src="img/ramiro-wide.jpg" alt="Cervejaria Ramiro" />
+              <Photo className="strip" src={leader.photo || 'img/ramiro-wide.jpg'} alt={leader.name} fallback={<div className="strip" style={{ background: 'var(--beige)' }} />} />
               <div className="h">
                 <div className="txt"><div style={{ fontWeight: 700, fontSize: 15 }}>{leader.name}</div><div className="meta">Won {totalVotes} of {members.length} · 19:30 · 12 min walk</div></div>
                 <img src="img/map.jpg" alt="Map" />
               </div>
               <div className="chips">
-                <Chip icon="directions_walk" onClick={() => say('Opening Maps')}>Directions</Chip>
+                <a className="chip" href={directionsUrl(leader.name)} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}><Icon name="directions_walk" />Directions</a>
                 <Chip icon="restaurant" onClick={() => say('Table for 6 requested')}>Book a table</Chip>
               </div>
             </div>
@@ -567,7 +601,13 @@ function SettleSheet({ t, members, onClose, onPick }) {
       <h1 className="title sm" style={{ margin: '6px 0 4px' }}>{from.name} pays {t.to === 'A' ? 'you' : to.name}<span className="sub">€{t.amount}</span></h1>
       <p className="meta" style={{ margin: '0 0 14px' }}>Pick how it was paid. TripUp never holds the money.</p>
       <div className="stack">
-        {RAILS.map((r) => <Row key={r.id} icon={r.icon} bg="var(--beige)" fg="var(--ink)" title={r.name} meta={r.meta} onClick={() => onPick(r)} />)}
+        {RAILS.map((r) => (
+          <button key={r.id} className="card row" onClick={() => onPick(r)}>
+            <RailLogo id={r.id} />
+            <span className="txt"><span className="t" style={{ display: 'block' }}>{r.name}</span><span className="m" style={{ display: 'block' }}>{r.meta}</span></span>
+            <span className="arrow"><Icon name="arrow_forward" /></span>
+          </button>
+        ))}
       </div>
     </Sheet>
   )
@@ -592,7 +632,7 @@ function Settled({ members, paid, onNext }) {
           {received.map((t, i) => (
             <div key={t.id} className="card transfer done" style={{ opacity: 1 }}>
               <Avatar m={byId(members, t.from)} size={46} ring="#fff" />
-              <span className="txt"><div className="t">€{t.amount} from {byId(members, t.from).name}</div><div className="w">{paid[t.id]?.name || 'Apple Pay'} · {i === 0 ? 'just now' : '2 min ago'}</div></span>
+              <span className="txt"><div className="t">€{t.amount} from {byId(members, t.from).name}</div><div className="w" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><RailLogo id={paid[t.id]?.id || 'applepay'} size={18} />{paid[t.id]?.name || 'Apple Pay'} · {i === 0 ? 'just now' : '2 min ago'}</div></span>
               <span className="paid"><Icon name="check_circle" fill style={{ fontSize: 16 }} /> Paid</span>
             </div>
           ))}
