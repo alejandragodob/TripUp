@@ -4,6 +4,7 @@ import { Icon, StatusBar, TopBar, Avatar, AvatarStack, Pill, Chip, Row, TabBar, 
 
 const byId = (list, id) => list.find((m) => m.id === id)
 const names = (list, ids) => ids.map((id) => (id === 'A' ? 'You' : byId(list, id)?.name)).filter(Boolean)
+const joinNames = (arr) => arr.length <= 1 ? arr.join('') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1]
 
 export default function App() {
   const [screen, setScreen] = useState('home')
@@ -430,9 +431,10 @@ function Chat({ members, options, votes, totalVotes, onOpen, go }) {
 function LivePoll({ members, go, onTab, options, votes, totalVotes, notVoted, leader, majority, status, castVote, onClose, say }) {
   const closed = status === 'closed'
   const [nudge, setNudge] = useState(false)
-  const who = names(members, notVoted.map((m) => m.id))
+  const others = notVoted.filter((m) => m.id !== 'A')
+  const who = others.map((m) => m.name)
   const [draft, setDraft] = useState('')
-  const openNudge = () => { setDraft(`Hey ${who.join(' and ')}, ${totalVotes} of us have voted and ${leader.name} is leading. Cast yours so we can close the poll and book a table for 19:30.`); setNudge(true) }
+  const openNudge = () => { setDraft(`Hey ${joinNames(who)}, ${totalVotes ? `${totalVotes} of us have voted and ${leader.name} is leading` : `the dinner poll is open: ${options.map((o) => o.name).join(', ')}`}. Cast yours so we can close it and book a table for 19:30.`); setNudge(true) }
   return (
     <div className="screen">
       <StatusBar />
@@ -446,7 +448,7 @@ function LivePoll({ members, go, onTab, options, votes, totalVotes, notVoted, le
           <div className="meta" style={{ margin: '12px 0 12px' }}>Tonight 19:30 · asked by Ari · <b style={{ color: 'var(--ink)' }}>{closed ? 'closed' : `${totalVotes} of ${members.length} voted`}</b></div>
           <div className="chips">
             <Chip icon="chat" onClick={() => go('chat')}>Share to chat</Chip>
-            {notVoted.length > 0 && !closed && <Chip icon="notifications_active" onClick={openNudge}>Nudge {who.join(' & ')}</Chip>}
+            {others.length > 0 && !closed && <Chip icon="notifications_active" onClick={openNudge}>Nudge {others.length > 2 ? `${others.length} people` : joinNames(who)}</Chip>}
           </div>
         </div>
         <Section>Options</Section>
@@ -483,10 +485,10 @@ function LivePoll({ members, go, onTab, options, votes, totalVotes, notVoted, le
       {nudge && (
         <Sheet onClose={() => setNudge(false)}>
           <div style={{ marginBottom: 8 }}><AIBadge>Drafted by TripUp AI · edit anything</AIBadge></div>
-          <h1 className="title sm" style={{ margin: '6px 0 14px' }}>Nudge {who.join(' & ')}<span className="sub">goes to the chat</span></h1>
+          <h1 className="title sm" style={{ margin: '6px 0 14px' }}>Nudge {others.length > 2 ? `${others.length} people` : joinNames(who)}<span className="sub">goes to the chat</span></h1>
           <textarea className="ai-draft" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="Nudge message" />
           <p className="caption" style={{ margin: '10px 0 14px' }}>Sent as you, in the group chat, with the poll card attached. Nobody sees it was drafted.</p>
-          <Pill onClick={() => { setNudge(false); say(`Nudge sent to ${who.join(' & ')}`) }} icon="send">Send to the chat</Pill>
+          <Pill onClick={() => { setNudge(false); say(`Nudge sent to ${joinNames(who)}`) }} icon="send">Send to the chat</Pill>
         </Sheet>
       )}
     </div>
@@ -522,7 +524,7 @@ function Plan({ members, go, onTab, leader, totalVotes, pollStatus, expenseLogge
       <div className="scroll has-tabs">
         {won ? (
           <>
-            <h1 className="title">Ramiro it is.<span className="sub">Added to tonight</span></h1>
+            <h1 className="title">{leader.name.split(' ').pop()} it is.<span className="sub">Added to tonight</span></h1>
             <div className="card winner">
               <Photo className="strip" src={leader.photo || 'img/ramiro-wide.jpg'} alt={leader.name} fallback={<div className="strip" style={{ background: 'var(--beige)' }} />} />
               <div className="h">
