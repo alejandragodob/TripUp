@@ -185,6 +185,9 @@ def wf_box(x,y,w,h,label,sub=None,fill="#fff",bold=False):
     return s
 def wf_btn(x,y,w,label,h=44):
     return rect(x,y,w,h,"#333",r=6)+text(x+w/2,y+h/2+5,label,13,"#fff","Open Sans",700,"middle")
+def imgbox(x,y,w,h,label="image"):
+    return (rect(x,y,w,h,"#E6E6E6","#8A8A8A",8,1.2)+f'<path d="M{x} {y} L{x+w} {y+h} M{x+w} {y} L{x} {y+h}" stroke="#B5B5B5" stroke-width="1"/>'
+            +rect(x+w/2-len(label)*3.4-8,y+h/2-9,len(label)*6.8+16,18,"#FFFFFF","#8A8A8A",9,1)+text(x+w/2,y+h/2+4,label,10,GREY,"Open Sans",600,"middle"))
 def wf_screen(name,title,elems,sheet=False,note=None):
     s=[rect(0,0,W,H,"#fff","#333",24,1.5),status_bar_wf()]
     s+=[text(20,96,title,26,INK,"Open Sans",600)]
@@ -220,12 +223,12 @@ def L(items,y=130,gap=10,h=52,x=20,w=353):
     return out
 
 screens = [
- ("01 · Home","Your trips", L([("Lisbon · Sep 24–28 · Day 4 of 4","Tonight: dinner still open · You're owed €42","#eee",1),None,None,None,None,"Coming up",
-    ("Primavera Sound, Barcelona","Jun 3–6, 2027 · 8 friends"),("Dolomites hut-to-hut","Past · settled"),("+ New trip   ·   Import from Splitwise",)],h=56)+[wf_btn(36,196,321,"Open trip"),wf_tabs("Trips")],
+ ("01 · Home","Your trips", [imgbox(20,130,353,80,"Lisbon photo")]+L([("Lisbon · Sep 24–28 · Day 4 of 4","Tonight: dinner still open · You're owed €42","#eee",1),None,None,None,None,"Coming up",
+    ("Primavera Sound, Barcelona","Jun 3–6, 2027 · 8 friends · [photo]"),("New York, Christmas markets","Past · settled · [photo]"),("+ New trip   ·   Import from Splitwise",)],y=222,h=56)+[wf_btn(36,292,321,"Open trip"),wf_tabs("Trips")],
    ("Live trip is the hero; the two soft chips are the next action and the money state.",)),
- ("02 · Trip group view","Last night in Lisbon", L([("Nic ORGANIZER · Ari · Maya · Theo · Sam   [+]","group photo · tap + → 03","#eee")]+
-    [("Dinner tonight is still open","3 places from the wishlist, ready to poll","#f4f4f4",1)],h=64)+[wf_btn(36,262,321,"Start the poll → 04")]+
-    L(["Today",("10:00 · Torre de Belém",),("14:00 · LX Factory","€86 · logged by Maya"),("Trip money · You're owed €42","→ 09")],y=330)+[wf_tabs("Trips")],
+ ("02 · Trip group view","Last night in Lisbon", [imgbox(20,130,353,80,"Lisbon photo · members + [+] overlay")]+L([("Nic ORGANIZER · Ari · Maya · Theo · Sam   [+]","avatars · tap + → 03","#eee"),
+    ("Dinner tonight is still open","3 places from the wishlist, ready to poll","#f4f4f4",1)],y=222,h=56)+[wf_btn(36,362,321,"Start the poll → 04")]+
+    L(["Today",("10:00 · Torre de Belém","[photo]"),("14:00 · LX Factory","€86 · logged by Maya · [photo]"),("Trip money · You're owed €42","→ 09")],y=424,h=48)+[wf_tabs("Trips")],
    ("Empty slot in today's plan = the one call to action. Money is a row, not a tab-jump.",)),
  ("03 · Add Ren (sheet)","Add someone to Lisbon", [rect(0,0,W,H,"#cfcfcf"),rect(0,100,W,H-100,"#fff",r=24),rect(W/2-20,112,40,4,"#999",r=2)]+L([("Share the join link","tripup.app/j/lisbon → group chat","#f4f4f4",1),
     ("1 Tap link · 2 Confirm number · 3 In","no install · no password · no profile"),"or add from contacts",("☑ Ren Okafor","+351 ··· 42 18 · joining for dinner tonight","#eee"),
@@ -246,9 +249,9 @@ screens = [
     ("Cervejaria Ramiro ▮▮▮▮▮▮▮▮ 3 · LEADING","You, Nic, Sam","#fff",1),("Taberna da Rua das Flores ▮▮ 1","Maya"),("Time Out Market  0","No votes yet"),
     "Group",("A N M S · T R (dimmed)","4 voted · Theo and Ren haven't yet")],h=56)+[text(20,640,"Closes when everyone has voted, or when you close it.",11,GREY,"Open Sans"),wf_btn(20,760,353,"Close poll · Ramiro wins → 07")],
    ("Votes arrive live: counts and bars animate, cards re-sort. Close is enabled once a majority exists.",)),
- ("07 · Plan updated","Ramiro it is. Added to tonight", L([("Cervejaria Ramiro · Won 4 of 6 · 19:30","[Directions] [Book a table]","#f4f4f4",1),"Today · Sat 27",
+ ("07 · Plan updated","Ramiro it is. Added to tonight", [imgbox(20,130,353,56,"restaurant photo")]+L([("Cervejaria Ramiro · Won 4 of 6 · 19:30","[Directions] [Book a table] [Maps]","#f4f4f4",1),"Today · Sat 27",
     ("10:00 · Torre de Belém","Done · 5 went"),("14:00 · LX Factory","€86 · logged by Maya"),("19:30 · Dinner · Cervejaria Ramiro  [poll]","From tonight's poll · 6 going","#eee",1),
-    ("After dinner · suggestion: Miradouro da Graça","Saved by Sam · [Poll it]")],h=56)+[wf_tabs("Plan")],
+    ("After dinner · suggestion: Miradouro da Graça","Saved by Sam · [Poll it]")],y=196,h=54)+[wf_tabs("Plan")],
    ("Result lands in the itinerary automatically and is traceable (“from poll”). Next empty slot gets a suggestion.",)),
  ("08 · Log expense","Dinner at Ramiro", L([("TOTAL €214.00","Paid by you · 6 people · receipt scanned","#f4f4f4",1),"Split by item",("Food €166","Everyone · €27.67 each"),
     ("Wine €48 · 4 people · €12 each","[Ari][Maya][Theo][Sam]  (Nic) (Ren)","#fff",1),("AI note: Nic and Ren usually skip wine. Tap a name to change",)],h=58)+[wf_btn(20,760,353,"Save · updates 6 balances → 09")],
@@ -257,8 +260,8 @@ screens = [
     ("N → A   Nic pays you €96",),("T → A   Theo pays you €92",),("R → M   Ren pays Maya €28","Instead of paying you, one transfer fewer"),
     ("Why? Ren owes you €28, you owe Maya €28","so Ren pays Maya directly","#f4f4f4"),("[Nudge Nic & Theo]  [Paid in cash?]",)],h=52)+[wf_tabs("Money")],
    ("Tap a transfer → settle sheet: Apple Pay / Revolut·Wise / Bank (IBAN copied) / Cash. All paid → 10.",)),
- ("10 · Settled","Lisbon is squared up.", L([("6 of 6 settled · €1,284 across 4 days","A N M T S R","#f4f4f4",1),"Received",("€96 from Nic · Apple Pay · just now","Paid"),
-    ("€92 from Theo · Revolut · 2 min ago","Paid"),("Posted to the group chat","“All settled, ready for the next one”")],h=56)+[wf_btn(20,760,353,"Plan the next trip → 01")],
+ ("10 · Settled","Lisbon is squared up.", [imgbox(20,130,353,100,"Lisbon photo")]+L([("6 of 6 settled · €1,284 across 4 days","A N M T S R","#f4f4f4",1),"Received",("€96 from Nic · Apple Pay · just now","Paid"),
+    ("€92 from Theo · Revolut · 2 min ago","Paid"),("Posted to the group chat","“All settled, ready for the next one”")],y=242,h=56)+[wf_btn(20,760,353,"Plan the next trip → 01")],
    ("Confirmation is group-wide, not private. closes the loop where it started (the chat).",)),
 ]
 
@@ -338,11 +341,76 @@ def wireflow():
     cyl=ay(yl)
     body.append(f'<circle cx="{xl+W+70}" cy="{cyl}" r="9" fill="#fff" stroke="#555" stroke-width="3"/>'+f'<path d="M{xl+W} {cyl} H{xl+W+56}" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>')
     body.append(text(xl+W+70,cyl-18,"END",10,GREY,"Open Sans",700,"middle"))
-    body.append(arrow_label(xl+W/2+40,cyl-22,"10 · Plan the next trip"))
+    body.append(arrow_label(xl+W+70,cyl+34,"10 · Plan the next trip"))
     body.append(f'<path d="M{xl+W+70} {cyl+10} V{yl+H+300} H{x0-70} V{ay(y0)+60} v-40" fill="none" stroke="#555" stroke-width="1.2" stroke-dasharray="6 6" marker-end="url(#ah)"/>')
     body.append(arrow_label((x0+xl)/2+W/2,yl+H+300,"loop · back to Home for the next trip"))
     total_w=mx*2+cols*W+(cols-1)*gx+120; total_h=my+2*H+gy+340
     return svg(total_w,total_h,body,bg="#F5F5F3")
 
 open(f"{OUT}/wireflow.svg","w").write(wireflow())
+
+def wrap(t,n):
+    out=[];line=""
+    for w in t.split():
+        if len(line)+len(w)+1>n: out.append(line);line=w
+        else: line=(line+" "+w).strip()
+    if line: out.append(line)
+    return out
+def card(x,y,w,title,items,kind="para",h=None):
+    body=[];cy=y+52
+    for it in items:
+        if kind=="para":
+            for l in wrap(it,int(w/6.6)): body.append(text(x+18,cy,l,12,INK,"Open Sans"));cy+=17
+            cy+=8
+        elif kind=="pair":
+            k,v=it;body.append(text(x+18,cy,k,12,INK,"Open Sans",700));cy+=17
+            for l in wrap(v,int(w/6.6)): body.append(text(x+18,cy,l,12,INK,"Open Sans"));cy+=17
+            cy+=8
+        elif kind=="step":
+            n,k,v,ref=it
+            body.append(f'<circle cx="{x+27}" cy="{cy-4}" r="10" fill="#333"/>'+text(x+27,cy,str(n),10,"#fff","Open Sans",700,"middle"))
+            body.append(text(x+46,cy,k,12,INK,"Open Sans",700))
+            body.append(rect(x+w-18-len(ref)*6.6-14,cy-13,len(ref)*6.6+14,18,"#fff","#555",9,1)+text(x+w-18-len(ref)*3.3-7,cy,ref,10,INK,"Open Sans",700,"middle"))
+            cy+=16
+            for l in wrap(v,int((w-46)/6.6)): body.append(text(x+46,cy,l,11.5,GREY,"Open Sans"));cy+=15
+            cy+=8
+        elif kind=="row":
+            k,v=it
+            body.append(text(x+18,cy,k,12,INK,"Open Sans",700));cy+=16
+            for l in wrap(v,int(w/6.6)): body.append(text(x+18,cy,"→ "+l if l==wrap(v,int(w/6.6))[0] else "   "+l,11.5,GREY,"Open Sans"));cy+=15
+            cy+=8
+    hh=h or (cy-y+6)
+    return rect(x,y,w,hh,"#fff","#555",10,1.2)+rect(x,y,w,34,"#333",r=10)+rect(x,y+24,w,10,"#333")+text(x+18,y+22,title.upper(),11,"#fff","Open Sans",700,extra='letter-spacing="1"')+"".join(body), hh
+
+def brief():
+    Wc=2440; body=[]
+    body.append(text(80,60,"The brief, and how TripUp answers it",28,INK,"Open Sans",700))
+    body.append(text(80,88,"TripUp design challenge · Bending Spoons. Left: what was asked. Right: where each ask is answered in the wireflow (screen numbers), the hi-fi and the prototype.",13,GREY,"Open Sans"))
+    x0=80; y0=120; gap=24
+    c1,h1=card(x0,y0,440,"Context",["Friend trips are great; organizing them is not. Deciding where to go, stay, eat and what to do, plus managing expenses and keeping everyone in the loop, gets frustrating fast.","TripUp is a mobile app for organizing group travel, from a weekend getaway to a festival abroad. Friends plan the trip, shape it as it unfolds, build itineraries together, vote on decisions, track and settle expenses.","The beta has traction; the team wants a full redesign."])
+    c2,h2=card(x0,y0+h1+gap,440,"Who",[("The Organizer","Most proactive. Sets up the trip, invites the others, keeps things moving. In TripUp: Nic, tagged ORGANIZER on screen 02. Same powers as everyone else."),("The Participants","Want to be involved without being overwhelmed. Suggest ideas, vote, stay informed. In TripUp: Ari drives the whole evening as a participant, which is the point.")],"pair")
+    c3,h3=card(x0,y0+h1+h2+gap*2,440,"How they behave",[("Spontaneous decisions","Most group choices happen on the fly, mid-trip. Answered by: one-tap poll from the trip screen (02 to 04), live votes (06)."),("Shared ownership","One person leads, everyone wants input on food, activities, money. Answered by: identical powers, votes from the chat (05), item-level splits anyone can edit (08)."),("Low tolerance for friction","More than a couple of taps and they switch to WhatsApp. Answered by: TripUp lives inside the chat (05), no account for guests (03b), no wallet (09).")],"pair")
+    c4,h4=card(x0,y0+h1+h2+h3+gap*3,440,"What they want",[("Polls over chats","Quick, intuitive polls beat long threads. Answered by: 04, 05, 06."),("Simple expense tracking","Manage and settle group expenses, including in-app payments by bank transfer or digital methods. Answered by: 08, 09, settle sheet with Apple Pay, Revolut, Wise, bank, cash."),("Real-time feedback","Decisions reflected instantly in the itinerary and notifications. Answered by: live bars (06), auto-added dinner (07), push + chat card for every event.")],"pair")
+    x1=x0+440+gap
+    steps=[(1,"Ari opens TripUp","Last evening in Lisbon, back at the house. Home lists all her trips; the live one is the hero.","01"),
+           (2,"Opens the group view","Members with Nic tagged organizer, today's plan, the open dinner slot as the one call to action.","02"),
+           (3,"Adds Ren for the final dinner","Join link or contacts. Ren joins in the browser with her phone number, no app, no password. Joining tonight only keeps her out of earlier splits.","03 · 03b"),
+           (4,"Creates a poll: three nearby restaurants","Drafted from the group's Google Maps wishlist, different vibes and prices. Near me and Search Maps add more. Every option opens in Maps.","04"),
+           (5,"The app notifies everyone","Push to all six, and the poll lands in the group chat as a live card. Votes happen from the chat.","05"),
+           (6,"The leading option updates in real time","Theo's vote arrives, bars animate, cards re-sort. Close is allowed once a majority exists.","06"),
+           (7,"Poll closes, winner goes into the itinerary","Ramiro at 19:30, tagged from poll, with directions and booking. The next empty slot gets a suggestion.","07"),
+           (8,"After dinner Ari logs the expense","Receipt scanned into items. Nic and Ren excluded from the wine; every name is a tap to change.","08"),
+           (9,"Balances update, debts consolidated","3 transfers instead of 7, each explained in one sentence. Settle with the rails people already have.","09"),
+           (10,"Confirmation to the group","Lisbon is squared up. Posted to the chat, where the evening started.","10")]
+    c5,h5=card(x1,y0,640,"The scenario, step by step",steps,"step")
+    x2=x1+640+gap
+    c6,h6=card(x2,y0,560,"Deliverables",[("1 · Wireflow, the thinking","Section 1 in this file: 10 screens, numbered triggers, decision diamonds, decision / state / pattern callouts."),("2 · Hi-fi screens, the craft","Section 2: 02 Trip group view and 06 Live poll at full fidelity, Newsreader + Figtree, tokens from the spec."),("3 · Interactive prototype, the result","trip-up-three.vercel.app: React + Vite, mobile web, full journey, mock data, the two hi-fi screens inside it.")],"row")
+    c7,h7=card(x2,y0+h6+gap,560,"What reviewers look for",[("Is the scenario completely satisfied?","Ten steps, ten screens; the reset at the end lets a PM run it again."),("Usable without guidance?","One primary action per screen; every tap responds; no dead ends (audited)."),("Polished and consistent?","One token set across Figma and code; AA contrast; 44 px targets."),("Does the prototype represent the design?","02 and 06 built pixel-close from the hi-fi; same photos, type and spacing."),("Could a PM interact with it and understand the product?","Live poll simulation, chat-card twin, settle sheet with real rails."),("Value beyond the brief?","Guest join without an account, wishlist and Maps sourcing, explained transfers, accessibility pass. Full critique in the repo: figma/CRITIQUE.md.")],"row")
+    c8,h8=card(x2,y0+h6+h7+gap*2,560,"Constraints",[("Device","iPhone 15, 393 × 852. One device, kept throughout: frame on desktop, fills the screen on a phone."),("Submission","Figma link (view for anyone with the link), public prototype URL, optional GitHub repo. No zip files. English only.")],"row")
+    body+= [c1,c2,c3,c4,c5,c6,c7,c8]
+    Hc=max(y0+h1+h2+h3+h4+gap*3, y0+h5, y0+h6+h7+h8+gap*2)+80
+    return svg(Wc,Hc,body,bg="#F5F5F3")
+
+open(f"{OUT}/brief.svg","w").write(brief())
+
 print("ok")

@@ -4,7 +4,8 @@ Paste-into-Figma files. Figma turns SVG into editable frames, vectors and text.
 
 | File | What | Size |
 |---|---|---|
-| `wireflow.svg` | Layer 1: the Lisbon scenario in 10 lo-fi screens with decision (red), state (green) and pattern (blue) callouts | 3045 × 2264 |
+| `brief.svg` | Section 0: the brief, and where each ask is answered (context, users, behaviours, scenario steps with screen numbers, deliverables, reviewer questions, constraints) | 2440 × 1221 |
+| `wireflow.svg` | Section 1: the Lisbon scenario in 10 lo-fi screens. Numbered triggers on every arrow, decision diamonds, START/END, legend, decision (red) / state (green) / pattern (blue) callouts | 3505 × 2694 |
 | `hifi-02-trip.svg` | Layer 2, key screen ★: 02 Trip group view | 393 × 852 |
 | `hifi-06-poll.svg` | Layer 2, key screen ★: 06 Live poll | 393 × 852 |
 | `*.png` | Previews rendered without the real fonts (serif fallback). In Figma the fonts resolve. | |
